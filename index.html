@@ -8,6 +8,7 @@
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
@@ -22,7 +23,9 @@
     <!-- Header -->
     <div class="container py-3 d-flex justify-content-between align-items-center">
         <h3 class="fw-bold m-0 text-white">roadsales</h3>
-        <button class="btn btn-warning fw-bold text-white px-4" data-bs-toggle="modal" data-bs-target="#addModal">+ Reys kiritish</button>
+        <div id="authButtons" class="d-flex gap-2">
+            <!-- JavaScript orqali mos tugmalar chiqadi -->
+        </div>
     </div>
 
     <!-- Main Content -->
@@ -33,6 +36,38 @@
             <h4 class="fw-bold mb-4 text-dark">Mavjud reyslar</h4>
             <div id="reyslarContainer">
                 <p class="text-muted text-center py-4">Reyslar yuklanmoqda...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kirish / Ro'yxatdan o'tish Modali -->
+    <div class="modal fade text-dark" id="authModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="authModalTitle">Tizimga kirish</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="authForm">
+                        <input type="hidden" id="authMode" value="login">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" id="authEmail" class="form-control" placeholder="example@mail.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Parol (kamida 6 ta belgi)</label>
+                            <input type="password" id="authPassword" class="form-control" placeholder="******" required minlength="6">
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="#" id="toggleAuthMode" class="small text-decoration-none">Ro'yxatdan o'tish</a>
+                            <div>
+                                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Bekor qilish</button>
+                                <button type="submit" id="authSubmitBtn" class="btn btn-primary fw-bold">Kirish</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -122,7 +157,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // 1. Firebase Initsializatsiyasi
+        // 1. Firebase Config
         const firebaseConfig = {
             databaseURL: "https://roadsales-d76af-default-rtdb.europe-west1.firebasedatabase.app"
         };
@@ -130,12 +165,92 @@
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.database();
+        const auth = firebase.auth();
 
-        // 2. Yangi reysni saqlash
+        let currentUser = null;
+
+        // 2. Auth Holatini Kuzatish
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            const authButtons = document.getElementById('authButtons');
+            if (user) {
+                authButtons.innerHTML = `
+                    <button class="btn btn-warning fw-bold text-white px-3" data-bs-toggle="modal" data-bs-target="#addModal">+ Reys kiritish</button>
+                    <button onclick="logout()" class="btn btn-outline-light btn-sm">Chiqish (${user.email.split('@')[0]})</button>
+                `;
+            } else {
+                authButtons.innerHTML = `
+                    <button onclick="openAuthModal('login')" class="btn btn-light fw-bold text-primary px-3">Kirish</button>
+                    <button onclick="openAuthModal('register')" class="btn btn-warning fw-bold text-white px-3">Ro'yxatdan o'tish</button>
+                `;
+            }
+            renderReyslar();
+        });
+
+        // 3. Auth Modal funksiyalari
+        function openAuthModal(mode) {
+            const modal = new bootstrap.Modal(document.getElementById('authModal'));
+            setAuthMode(mode);
+            modal.show();
+        }
+
+        function setAuthMode(mode) {
+            document.getElementById('authMode').value = mode;
+            if (mode === 'login') {
+                document.getElementById('authModalTitle').innerText = 'Tizimga kirish';
+                document.getElementById('authSubmitBtn').innerText = 'Kirish';
+                document.getElementById('toggleAuthMode').innerText = "Akkauntingiz yo'qmi? Ro'yxatdan o'ting";
+            } else {
+                document.getElementById('authModalTitle').innerText = "Ro'yxatdan o'tish";
+                document.getElementById('authSubmitBtn').innerText = "Ro'yxatdan o'tish";
+                document.getElementById('toggleAuthMode').innerText = "Akkauntingiz bormi? Kirish";
+            }
+        }
+
+        document.getElementById('toggleAuthMode').addEventListener('click', (e) => {
+            e.preventDefault();
+            const currentMode = document.getElementById('authMode').value;
+            setAuthMode(currentMode === 'login' ? 'register' : 'login');
+        });
+
+        // 4. Form Submit Auth
+        document.getElementById('authForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const mode = document.getElementById('authMode').value;
+
+            if (mode === 'login') {
+                auth.signInWithEmailAndPassword(email, password)
+                    .then(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('authModal')).hide();
+                        document.getElementById('authForm').reset();
+                    })
+                    .catch(err => alert("Kirishda xatolik: " + err.message));
+            } else {
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('authModal')).hide();
+                        document.getElementById('authForm').reset();
+                    })
+                    .catch(err => alert("Ro'yxatdan o'tishda xatolik: " + err.message));
+            }
+        });
+
+        function logout() {
+            auth.signOut();
+        }
+
+        // 5. Yangi reys saqlash (Owner ID bilan)
         document.getElementById('reysForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
+            if (!currentUser) {
+                alert("E'lon joylash uchun avval tizimga kiring!");
+                return;
+            }
+
             const newReys = {
+                ownerUid: currentUser.uid,
                 qayerdan: document.getElementById('qayerdan').value,
                 qayerga: document.getElementById('qayerga').value,
                 vaqt: document.getElementById('vaqt').value.replace('T', ' '),
@@ -153,14 +268,13 @@
             }).catch(err => alert("Xatolik: " + err.message));
         });
 
-        // 3. Bron modalini ochish
+        // 6. Bron Qilish
         function openBronModal(key) {
             document.getElementById('bronReysId').value = key;
             const modal = new bootstrap.Modal(document.getElementById('bronModal'));
             modal.show();
         }
 
-        // 4. Bron qilish jarayoni
         document.getElementById('bronForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const key = document.getElementById('bronReysId').value;
@@ -178,13 +292,13 @@
                         reys.mijozlar[newMijozKey] = { ism: ism, tel: tel };
                     } else {
                         alert("Kechirasiz, ushbu reysda bo'sh joy qolmagan!");
-                        return; // joy qolmagan bo'lsa to'xtatish
+                        return;
                     }
                 }
                 return reys;
             }, (error, committed) => {
                 if (error) {
-                    alert("Bron qilishda xatolik yuz berdi: " + error.message);
+                    alert("Bron qilishda xatolik: " + error.message);
                 } else if (committed) {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('bronModal'));
                     modal.hide();
@@ -194,35 +308,43 @@
             });
         });
 
-        // 5. Reysni o'chirish
+        // 7. Reysni o'chirish
         function deleteReys(key) {
             if (confirm("Ushbu e'lonni o'chirmoqchimisiz?")) {
                 db.ref('reyslar/' + key).remove();
             }
         }
 
-        // 6. Real-vaqtda ma'lumotlarni yuklash va chiqarish
+        // 8. Reyslarni render qilish
+        let latestData = null;
         db.ref('reyslar').on('value', (snapshot) => {
+            latestData = snapshot.val();
+            renderReyslar();
+        });
+
+        function renderReyslar() {
             const container = document.getElementById('reyslarContainer');
-            const data = snapshot.val();
             container.innerHTML = '';
 
-            if (!data) {
-                container.innerHTML = '<p class="text-muted text-center py-4">Hozircha faol reyslar yo\'q. Yuqoridagi "Reys kiritish" tugmasini bosib e\'lon qo\'shing.</p>';
+            if (!latestData) {
+                container.innerHTML = '<p class="text-muted text-center py-4">Hozircha faol reyslar yo\'q.</p>';
                 return;
             }
 
-            Object.keys(data).reverse().forEach((key) => {
-                const item = data[key];
-                
-                // Bron qilgan mijozlar ro'yxatini shakllantirish
+            Object.keys(latestData).reverse().forEach((key) => {
+                const item = latestData[key];
+                const isOwner = currentUser && (currentUser.uid === item.ownerUid);
+
+                // Mijozlar ro'yxati faqat e'lon egasiga ko'rinadi
                 let mijozlarHTML = '';
-                if (item.mijozlar) {
-                    Object.values(item.mijozlar).forEach(m => {
-                        mijozlarHTML += `<li class="small text-dark">👤 <b>${m.ism}</b> (📞 ${m.tel})</li>`;
-                    });
-                } else {
-                    mijozlarHTML = '<span class="small text-muted">Hozircha bron qilgan mijozlar yo\'q</span>';
+                if (isOwner) {
+                    if (item.mijozlar) {
+                        Object.values(item.mijozlar).forEach(m => {
+                            mijozlarHTML += `<li class="small text-dark">👤 <b>${m.ism}</b> (📞 ${m.tel})</li>`;
+                        });
+                    } else {
+                        mijozlarHTML = '<span class="small text-muted">Hozircha bron qilgan mijozlar yo\'q</span>';
+                    }
                 }
 
                 const joyQolmagan = item.joy <= 0;
@@ -243,14 +365,15 @@
                             <div>📞 Haydovchi tel: ${item.tel}</div>
                         </div>
 
-                        <!-- Bron qilganlar ro'yxati -->
+                        ${isOwner ? `
                         <div class="bron-box border-top">
-                            <div class="fw-bold small text-secondary mb-1">👥 Bron qilgan mijozlar (Haydovchi uchun):</div>
+                            <div class="fw-bold small text-secondary mb-1">👥 Bron qilgan mijozlar (Faqat sizga ko'rinadi):</div>
                             <ul class="list-unstyled mb-0 ms-2">${mijozlarHTML}</ul>
                         </div>
+                        ` : ''}
 
                         <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-                            <button onclick="deleteReys('${key}')" class="btn btn-outline-danger btn-sm">E'lonni o'chirish</button>
+                            ${isOwner ? `<button onclick="deleteReys('${key}')" class="btn btn-outline-danger btn-sm">E'lonni o'chirish</button>` : '<div></div>'}
                             <button onclick="openBronModal('${key}')" class="btn btn-primary px-4 fw-bold" ${joyQolmagan ? 'disabled' : ''}>
                                 ${joyQolmagan ? 'Joy yo\'q' : 'Bron qilish'}
                             </button>
@@ -258,7 +381,7 @@
                     </div>
                 `;
             });
-        });
+        }
     </script>
 </body>
 </html>
