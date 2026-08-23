@@ -7,11 +7,13 @@
     <!-- PDF & QR Code Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0c73fe; color: #1e293b; min-height: 100vh; position: relative; }
 
-        /* Top Navigation Header */
         .navbar { max-width: 1200px; margin: 0 auto; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
         .logo-text { font-size: 32px; font-weight: 900; color: #ffffff; text-decoration: none; letter-spacing: -1px; }
 
@@ -21,7 +23,6 @@
 
         .btn-driver-toggle { background: #ff6d00; border: none; color: white; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
-        /* Hero & Search Widget */
         .hero { max-width: 1100px; margin: 25px auto 0 auto; padding: 0 20px; text-align: center; color: white; }
         .hero h1 { font-size: 38px; font-weight: 900; margin-bottom: 22px; letter-spacing: -0.5px; }
 
@@ -31,7 +32,6 @@
         .tab-item.active { background: #ffffff; color: #0c73fe; }
         .tab-svg { width: 18px; height: 18px; fill: currentColor; }
 
-        /* Search Widget Box */
         .search-widget { background: #ff6d00; padding: 8px; border-radius: 18px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); max-width: 1080px; margin: 0 auto; position: relative; }
         .search-form { display: grid; grid-template-columns: 2fr 2fr 1.5fr 1.8fr auto; gap: 2px; border-radius: 12px; }
         .form-group { background: white; padding: 10px 14px; display: flex; flex-direction: column; justify-content: center; text-align: left; position: relative; cursor: pointer; }
@@ -42,7 +42,6 @@
         .code-badge { position: absolute; right: 12px; top: 18px; font-size: 11px; font-weight: 800; color: #94a3b8; }
         .btn-search { background: #ff6d00; color: white; border: none; padding: 0 28px; font-size: 18px; font-weight: 900; cursor: pointer; border-radius: 0 10px 10px 0; }
 
-        /* Dropdowns */
         .city-dropdown { display: none; position: absolute; top: 100%; left: 0; width: 320px; background: white; border-radius: 16px; box-shadow: 0 15px 30px rgba(0,0,0,0.25); margin-top: 8px; z-index: 100; padding: 12px 0; text-align: left; color: #1e293b; }
         .city-dropdown.active { display: block; }
         .dropdown-header { font-size: 13px; font-weight: 800; padding: 8px 16px; color: #0f172a; border-bottom: 1px solid #f1f5f9; }
@@ -59,7 +58,6 @@
         .counter-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #0c73fe; }
         .counter-val { font-weight: 800; font-size: 15px; width: 24px; text-align: center; }
 
-        /* Feed Area */
         .content-area { max-width: 1080px; margin: 30px auto 60px auto; padding: 0 20px; }
         .driver-modal { display: none; background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         .driver-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
@@ -67,8 +65,6 @@
         .btn-submit-driver { grid-column: 1 / -1; background: #10b981; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 15px; cursor: pointer; }
 
         .results-container { background: #f8fafc; border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        
-        /* Trip Card Base */
         .trip-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
         .trip-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; flex-wrap: wrap; }
         .trip-info h3 { font-size: 22px; font-weight: 900; color: #0f172a; margin-bottom: 8px; }
@@ -81,7 +77,6 @@
         .trip-price { font-size: 26px; font-weight: 900; color: #ff6d00; text-align: right; }
         .btn-book { background: #0c73fe; color: white; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(12, 115, 254, 0.25); }
 
-        /* Reys Tagidagi Mijozlar Boli'mi (Inline) */
         .trip-customers { margin-top: 15px; padding-top: 15px; border-top: 2px dashed #f1f5f9; }
         .customers-title { font-size: 13px; font-weight: 800; color: #475569; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
         .customer-tags { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -89,7 +84,6 @@
         .customer-phone { color: #0c73fe; text-decoration: none; font-weight: 800; background: #e0f2fe; padding: 2px 6px; border-radius: 4px; }
         .empty-customers { font-size: 12px; color: #94a3b8; font-style: italic; }
 
-        /* Footer */
         .site-footer { background: #ffffff; color: #1e293b; padding: 50px 0 0 0; border-top: 1px solid #e2e8f0; margin-top: 40px; }
         .footer-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; gap: 30px; }
         .footer-col h4 { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -104,7 +98,6 @@
         .footer-bottom { border-top: 1px solid #f1f5f9; margin-top: 40px; padding: 20px 0; background: #f8fafc; }
         .footer-bottom-inner { max-width: 1100px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #94a3b8; font-weight: 600; }
 
-        /* PDF TEMPLATE STYLES */
         #pdf-wrapper { display: none; }
         .pdf-page { width: 700px; background: #ffffff; padding: 25px; margin: 0 auto; box-sizing: border-box; }
         .ticket-header { background: #0c73fe; border-radius: 14px; padding: 18px 22px; color: white; display: flex; justify-content: space-between; align-items: center; }
@@ -126,54 +119,28 @@
 </head>
 <body>
 
-    <!-- Navbar -->
     <div class="navbar">
         <a href="#" class="logo-text">roadsales</a>
-
         <div class="nav-menu">
             <button class="btn-driver-toggle" onclick="toggleDriverModal()">
                 <svg style="width: 14px; height: 14px; fill: white;" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                 Reys kiritish
             </button>
-            
-            <a href="#" class="nav-item">
-                <svg class="nav-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                <span id="txt-nav-profile">Profil</span>
-            </a>
-            <a href="#" class="nav-item">
-                <svg class="nav-svg" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
-                <span id="txt-nav-passenger">Yo'lovchi</span>
-            </a>
-            <a href="#" class="nav-item">
-                <svg class="nav-svg" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-                <span id="txt-nav-support">Qo'llab-quvvatlash</span>
-            </a>
+            <a href="#" class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span id="txt-nav-profile">Profil</span></a>
+            <a href="#" class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg><span id="txt-nav-passenger">Yo'lovchi</span></a>
+            <a href="#" class="nav-item"><svg class="nav-svg" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg><span id="txt-nav-support">Qo'llab-quvvatlash</span></a>
             <a href="#" class="nav-item" onclick="toggleLanguage()">🌐 UZS · <span id="current-lang-text">UZ</span></a>
         </div>
     </div>
 
-    <!-- Hero Header -->
     <div class="hero">
         <h1 id="txt-title">Bu yerdan arzon safar chiptalarini sotib oling</h1>
-
         <div class="aviasales-tabs-wrapper">
             <div class="aviasales-tabs">
-                <div class="tab-item active" id="txt-tab-1">
-                    <svg class="tab-svg" viewBox="0 0 24 24"><path d="M4 16c0 1.1.9 2 2 2h1v2c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-2h6v2c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-2h1c1.1 0 2-.9 2-2V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>
-                    Avtobus & Taksi
-                </div>
-                <div class="tab-item" id="txt-tab-2">
-                    <svg class="tab-svg" viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>
-                    Mehmonxonalar
-                </div>
-                <div class="tab-item" id="txt-tab-3">
-                    <svg class="tab-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-                    Taassurotlar
-                </div>
-                <div class="tab-item" id="txt-tab-4">
-                    <svg class="tab-svg" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                    Sevimlilar
-                </div>
+                <div class="tab-item active" id="txt-tab-1"><svg class="tab-svg" viewBox="0 0 24 24"><path d="M4 16c0 1.1.9 2 2 2h1v2c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-2h6v2c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-2h1c1.1 0 2-.9 2-2V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>Avtobus & Taksi</div>
+                <div class="tab-item" id="txt-tab-2"><svg class="tab-svg" viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>Mehmonxonalar</div>
+                <div class="tab-item" id="txt-tab-3"><svg class="tab-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>Taassurotlar</div>
+                <div class="tab-item" id="txt-tab-4"><svg class="tab-svg" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>Sevimlilar</div>
             </div>
         </div>
 
@@ -185,15 +152,9 @@
                     <span class="code-badge" id="code-from">---</span>
                     <div class="city-dropdown" id="dropdown-from">
                         <div class="dropdown-header" id="txt-popular-1">Ommabop shaharlar</div>
-                        <div class="city-item" onclick="selectCity('from', 'Dashtobod', 'DST')">
-                            <div><div class="city-name">Dashtobod</div><div class="city-sub">Jizzax viloyati</div></div>
-                        </div>
-                        <div class="city-item" onclick="selectCity('from', 'Guliston', 'GLS')">
-                            <div><div class="city-name">Guliston</div><div class="city-sub">Sirdaryo viloyati</div></div>
-                        </div>
-                        <div class="city-item" onclick="selectCity('from', 'Toshkent', 'TAS')">
-                            <div><div class="city-name">Toshkent</div><div class="city-sub">Poytaxt</div></div>
-                        </div>
+                        <div class="city-item" onclick="selectCity('from', 'Dashtobod', 'DST')"><div><div class="city-name">Dashtobod</div><div class="city-sub">Jizzax viloyati</div></div></div>
+                        <div class="city-item" onclick="selectCity('from', 'Guliston', 'GLS')"><div><div class="city-name">Guliston</div><div class="city-sub">Sirdaryo viloyati</div></div></div>
+                        <div class="city-item" onclick="selectCity('from', 'Toshkent', 'TAS')"><div><div class="city-name">Toshkent</div><div class="city-sub">Poytaxt</div></div></div>
                     </div>
                 </div>
 
@@ -203,15 +164,9 @@
                     <span class="code-badge" id="code-to">---</span>
                     <div class="city-dropdown" id="dropdown-to">
                         <div class="dropdown-header" id="txt-popular-2">Ommabop shaharlar</div>
-                        <div class="city-item" onclick="selectCity('to', 'Guliston', 'GLS')">
-                            <div><div class="city-name">Guliston</div><div class="city-sub">Sirdaryo viloyati</div></div>
-                        </div>
-                        <div class="city-item" onclick="selectCity('to', 'Dashtobod', 'DST')">
-                            <div><div class="city-name">Dashtobod</div><div class="city-sub">Jizzax viloyati</div></div>
-                        </div>
-                        <div class="city-item" onclick="selectCity('to', 'Toshkent', 'TAS')">
-                            <div><div class="city-name">Toshkent</div><div class="city-sub">Poytaxt</div></div>
-                        </div>
+                        <div class="city-item" onclick="selectCity('to', 'Guliston', 'GLS')"><div><div class="city-name">Guliston</div><div class="city-sub">Sirdaryo viloyati</div></div></div>
+                        <div class="city-item" onclick="selectCity('to', 'Dashtobod', 'DST')"><div><div class="city-name">Dashtobod</div><div class="city-sub">Jizzax viloyati</div></div></div>
+                        <div class="city-item" onclick="selectCity('to', 'Toshkent', 'TAS')"><div><div class="city-name">Toshkent</div><div class="city-sub">Poytaxt</div></div></div>
                     </div>
                 </div>
 
@@ -227,41 +182,17 @@
 
                     <div class="passenger-popup" id="passenger-popup-box" onclick="event.stopPropagation()">
                         <div style="font-weight: 900; font-size: 16px; margin-bottom: 14px;" id="txt-pass-head">Yo'lovchilar soni</div>
-                        
                         <div class="pass-row">
-                            <div>
-                                <div class="pass-title" id="txt-adults">Kattalar</div>
-                                <div class="pass-desc" id="txt-adults-sub">12 yosh va undan katta</div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <button type="button" class="counter-btn" onclick="updateCount('adults', -1)">-</button>
-                                <span class="counter-val" id="cnt-adults">1</span>
-                                <button type="button" class="counter-btn" onclick="updateCount('adults', 1)">+</button>
-                            </div>
+                            <div><div class="pass-title" id="txt-adults">Kattalar</div><div class="pass-desc" id="txt-adults-sub">12 yosh va undan katta</div></div>
+                            <div style="display: flex; align-items: center; gap: 8px;"><button type="button" class="counter-btn" onclick="updateCount('adults', -1)">-</button><span class="counter-val" id="cnt-adults">1</span><button type="button" class="counter-btn" onclick="updateCount('adults', 1)">+</button></div>
                         </div>
-
                         <div class="pass-row">
-                            <div>
-                                <div class="pass-title" id="txt-children">Bolalar</div>
-                                <div class="pass-desc" id="txt-kids-sub">2 yoshdan 11 yoshgacha</div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <button type="button" class="counter-btn" onclick="updateCount('children', -1)">-</button>
-                                <span class="counter-val" id="cnt-children">0</span>
-                                <button type="button" class="counter-btn" onclick="updateCount('children', 1)">+</button>
-                            </div>
+                            <div><div class="pass-title" id="txt-children">Bolalar</div><div class="pass-desc" id="txt-kids-sub">2 yoshdan 11 yoshgacha</div></div>
+                            <div style="display: flex; align-items: center; gap: 8px;"><button type="button" class="counter-btn" onclick="updateCount('children', -1)">-</button><span class="counter-val" id="cnt-children">0</span><button type="button" class="counter-btn" onclick="updateCount('children', 1)">+</button></div>
                         </div>
-
                         <div class="pass-row">
-                            <div>
-                                <div class="pass-title" id="txt-infants">Chaqaloqlar</div>
-                                <div class="pass-desc" id="txt-infants-sub">2 yoshgacha, o'rindiqsiz</div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <button type="button" class="counter-btn" onclick="updateCount('infants', -1)">-</button>
-                                <span class="counter-val" id="cnt-infants">0</span>
-                                <button type="button" class="counter-btn" onclick="updateCount('infants', 1)">+</button>
-                            </div>
+                            <div><div class="pass-title" id="txt-infants">Chaqaloqlar</div><div class="pass-desc" id="txt-infants-sub">2 yoshgacha, o'rindiqsiz</div></div>
+                            <div style="display: flex; align-items: center; gap: 8px;"><button type="button" class="counter-btn" onclick="updateCount('infants', -1)">-</button><span class="counter-val" id="cnt-infants">0</span><button type="button" class="counter-btn" onclick="updateCount('infants', 1)">+</button></div>
                         </div>
                     </div>
                 </div>
@@ -271,7 +202,6 @@
         </div>
     </div>
 
-    <!-- Feed & Driver Form -->
     <div class="content-area">
         <div class="driver-modal" id="driverModal">
             <h2 id="txt-add-title">🚗 Yangi reys e'lon qilish</h2>
@@ -290,14 +220,12 @@
             </form>
         </div>
 
-        <!-- Trips Feed -->
         <div class="results-container">
             <h2 style="font-size: 18px; font-weight: 900; margin-bottom: 15px; color: #0f172a;" id="txt-results-title">Mavjud reyslar</h2>
             <div id="trips-list"></div>
         </div>
     </div>
 
-    <!-- Extended Rich Footer -->
     <footer class="site-footer">
         <div class="footer-container">
             <div>
@@ -305,46 +233,11 @@
                 <p class="footer-desc" id="txt-footer-desc">O'zbekiston bo'ylab eng arzon avtobus va taksi chiptalarini bir zumda qidirish hamda qulay bron qilish xizmati.</p>
                 <div class="copyright-text">© 2026 Roadsales Inc.</div>
             </div>
-
-            <div class="footer-col">
-                <h4 id="f-head-1">Yo'nalishlar</h4>
-                <ul>
-                    <li><a href="#">Dashtobod — Guliston</a></li>
-                    <li><a href="#">Toshkent — Samarqand</a></li>
-                    <li><a href="#">Toshkent — Buxoro</a></li>
-                    <li><a href="#">Toshkent — Farg'ona</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-col">
-                <h4 id="f-head-2">Xizmatlar</h4>
-                <ul>
-                    <li><a href="#">Avtobus chiptalari</a></li>
-                    <li><a href="#">Shaharlararo Taksi</a></li>
-                    <li><a href="#">Mehmonxonalar</a></li>
-                    <li><a href="#">Haydovchi bo'lish</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-col">
-                <h4 id="f-head-3">Kompaniya</h4>
-                <ul>
-                    <li><a href="#">Biz haqimizda</a></li>
-                    <li><a href="#">Vakansiyalar</a></li>
-                    <li><a href="#">Press-tsentr</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-col">
-                <h4 id="f-head-4">Yordam</h4>
-                <ul>
-                    <li><a href="#">Qo'llab-quvvatlash</a></li>
-                    <li><a href="#">Chiptani qaytarish</a></li>
-                    <li><a href="#">Maxfiylik siyosati</a></li>
-                </ul>
-            </div>
+            <div class="footer-col"><h4 id="f-head-1">Yo'nalishlar</h4><ul><li><a href="#">Dashtobod — Guliston</a></li><li><a href="#">Toshkent — Samarqand</a></li></ul></div>
+            <div class="footer-col"><h4 id="f-head-2">Xizmatlar</h4><ul><li><a href="#">Avtobus chiptalari</a></li><li><a href="#">Shaharlararo Taksi</a></li></ul></div>
+            <div class="footer-col"><h4 id="f-head-3">Kompaniya</h4><ul><li><a href="#">Biz haqimizda</a></li></ul></div>
+            <div class="footer-col"><h4 id="f-head-4">Yordam</h4><ul><li><a href="#">Qo'llab-quvvatlash</a></li></ul></div>
         </div>
-
         <div class="footer-bottom">
             <div class="footer-bottom-inner">
                 <span id="txt-bottom-info">Roadsales — Chiptalarni izlash tizimi. Barcha huquqlar himoyalangan.</span>
@@ -353,26 +246,14 @@
         </div>
     </footer>
 
-    <!-- PDF CHIPTA TEMPLATE -->
     <div id="pdf-wrapper">
         <div class="pdf-page" id="pdf-page-1">
-            <div class="ticket-header">
-                <div class="brand">roadsales</div>
-                <div class="pass-type" id="pdf-t-official">Rasmiy Safar Chiptasi</div>
-            </div>
-            
+            <div class="ticket-header"><div class="brand">roadsales</div><div class="pass-type" id="pdf-t-official">Rasmiy Safar Chiptasi</div></div>
             <div class="route-hero">
-                <div class="city-box">
-                    <div class="lbl" id="pdf-t-dep">Jo'nash Manzili</div>
-                    <div class="city" id="pdf-from">--</div>
-                </div>
+                <div class="city-box"><div class="lbl" id="pdf-t-dep">Jo'nash Manzili</div><div class="city" id="pdf-from">--</div></div>
                 <div style="font-size: 24px; color: #0c73fe; font-weight: 900;">➔</div>
-                <div class="city-box">
-                    <div class="lbl" id="pdf-t-arr">Manzil</div>
-                    <div class="city" id="pdf-to">--</div>
-                </div>
+                <div class="city-box"><div class="lbl" id="pdf-t-arr">Manzil</div><div class="city" id="pdf-to">--</div></div>
             </div>
-
             <div class="details-grid">
                 <div class="info-card"><div class="label" id="pdf-t-passenger">Yo'lovchi</div><div class="value" id="pdf-passenger">--</div></div>
                 <div class="info-card"><div class="label" id="pdf-t-id">Chipta ID</div><div class="value" id="pdf-id">--</div></div>
@@ -384,18 +265,21 @@
                 <div class="info-card"><div class="label" id="pdf-t-baggage">Bagaj Ruxsati</div><div class="value" id="pdf-baggage">1 ta Chamadon (20kg)</div></div>
                 <div class="info-card"><div class="label" id="pdf-t-price">Jami Narxi</div><div class="value" style="color: #ff6d00;" id="pdf-price">-- UZS</div></div>
             </div>
-
             <div class="qrcode-section">
-                <div>
-                    <div style="font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 6px;" id="pdf-t-verify">VERIFIKATSIYA KODI</div>
-                    <div class="barcode-mock"></div>
-                </div>
+                <div><div style="font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 6px;" id="pdf-t-verify">VERIFIKATSIYA KODI</div><div class="barcode-mock"></div></div>
                 <div id="qrcode"></div>
             </div>
         </div>
     </div>
 
     <script>
+        // FIREBASE INITIALIZATION
+        const firebaseConfig = {
+            databaseURL: "https://roadsales-d76af-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         let currentLang = 'uz';
         let passengerCounts = { adults: 1, children: 0, infants: 0 };
         let trips = [];
@@ -418,9 +302,7 @@
                 pdfPass: "Yo'lovchi", pdfId: "Chipta ID", pdfDate: "Sana va Vaqt", pdfCar: "Avtomobil",
                 pdfPhone: "Yo'lovchi tel", pdfSeat: "O'rindiq №", pdfClass: "Tarif Turi", pdfBaggage: "Bagaj Ruxsati",
                 pdfPrice: "Jami Narxi", pdfVerify: "VERIFIKATSIYA KODI",
-                pdfSeatVal: "02 (Deraza yonida)",
-                pdfClassVal: "Iqtisodiyot (Standard)",
-                pdfBaggageVal: "1 ta Chamadon (20kg)"
+                pdfSeatVal: "02 (Deraza yonida)", pdfClassVal: "Iqtisodiyot (Standard)", pdfBaggageVal: "1 ta Chamadon (20kg)"
             },
             ru: {
                 title: "Покупайте дешевые билеты на поездки здесь",
@@ -439,22 +321,30 @@
                 pdfPass: "Пассажир", pdfId: "ID Билета", pdfDate: "Дата и Время", pdfCar: "Автомобиль",
                 pdfPhone: "Тел. пассажира", pdfSeat: "Место №", pdfClass: "Тариф", pdfBaggage: "Багаж",
                 pdfPrice: "Итоговая цена", pdfVerify: "КОД ВЕРИФИКАЦИИ",
-                pdfSeatVal: "02 (У окна)",
-                pdfClassVal: "Эконом (Стандарт)",
-                pdfBaggageVal: "1 Чемодан (20кг)"
+                pdfSeatVal: "02 (У окна)", pdfClassVal: "Эконом (Стандарт)", pdfBaggageVal: "1 Чемодан (20кг)"
             }
         };
+
+        // REALTIME DATABASE INTEGRATION (ON DATA CHANGE)
+        db.ref('trips').on('value', (snapshot) => {
+            const data = snapshot.val();
+            trips = [];
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    trips.push({ key: key, ...data[key] });
+                });
+            }
+            renderTrips(trips);
+        });
 
         function filterCities(type) {
             const inputVal = document.getElementById(`search-${type}`).value.toLowerCase();
             const dropdown = document.getElementById(`dropdown-${type}`);
             const items = dropdown.querySelectorAll('.city-item');
             dropdown.classList.add('active');
-            
             if(inputVal.length >= 3) {
                 document.getElementById(`code-${type}`).innerText = inputVal.substring(0, 3).toUpperCase();
             }
-
             items.forEach(item => {
                 const text = item.innerText.toLowerCase();
                 item.style.display = text.includes(inputVal) ? 'flex' : 'none';
@@ -464,7 +354,6 @@
         function toggleLanguage() {
             currentLang = currentLang === 'uz' ? 'ru' : 'uz';
             document.getElementById('current-lang-text').innerText = currentLang.toUpperCase();
-            
             const t = i18n[currentLang];
             document.getElementById('txt-title').innerText = t.title;
             document.getElementById('lbl-from').innerText = t.from;
@@ -488,14 +377,12 @@
             document.getElementById('txt-infants').innerText = t.infants;
             document.getElementById('txt-infants-sub').innerText = t.infantsSub;
             document.getElementById('txt-class-sub').innerText = t.classSub;
-
             document.getElementById('txt-footer-desc').innerText = t.footerDesc;
             document.getElementById('f-head-1').innerText = t.fHead1;
             document.getElementById('f-head-2').innerText = t.fHead2;
             document.getElementById('f-head-3').innerText = t.fHead3;
             document.getElementById('f-head-4').innerText = t.fHead4;
             document.getElementById('txt-bottom-info').innerText = t.bottomInfo;
-
             updatePassengerSummary();
             renderTrips(trips);
         }
@@ -584,7 +471,7 @@
                             </div>
                             <div class="trip-action">
                                 <div class="trip-price">${Number(trip.price).toLocaleString()} UZS</div>
-                                <button class="btn-book" onclick="bookTicket(${trip.id})">${i18n[currentLang].bookBtn}</button>
+                                <button class="btn-book" onclick="bookTicket('${trip.key}')">${i18n[currentLang].bookBtn}</button>
                             </div>
                         </div>
 
@@ -627,16 +514,16 @@
                 badges: [{ text: "✨ Yangi Reys", type: "cheap" }],
                 bookedCustomers: []
             };
-            trips.unshift(newTrip);
-            renderTrips(trips);
+
+            // Save to Firebase
+            db.ref('trips').push(newTrip);
             toggleDriverModal();
-            alert("Reys e'lon qilindi!");
+            alert("Reys e'lon qilindi va bazaga saqlandi!");
             e.target.reset();
         }
 
-        function bookTicket(tripId) {
+        function bookTicket(tripKey) {
             const isUz = currentLang === 'uz';
-            
             const passengerName = prompt(isUz ? "Ism va familiyangizni kiriting:" : "Введите ваше имя и фамилию:");
             if (!passengerName || passengerName.trim() === "") return;
 
@@ -646,19 +533,19 @@
                 return;
             }
 
-            const trip = trips.find(t => t.id === tripId);
+            const trip = trips.find(t => t.key === tripKey);
             if (trip && trip.seats > 0) {
-                trip.seats--;
-                
-                trip.bookedCustomers.push({
-                    name: passengerName,
-                    phone: passengerPhone
+                const updatedSeats = trip.seats - 1;
+                const updatedCustomers = trip.bookedCustomers || [];
+                updatedCustomers.push({ name: passengerName, phone: passengerPhone });
+
+                // Update Firebase
+                db.ref('trips/' + tripKey).update({
+                    seats: updatedSeats,
+                    bookedCustomers: updatedCustomers
                 });
 
-                renderTrips(trips);
-
                 const t = i18n[currentLang];
-                
                 document.getElementById('pdf-t-official').innerText = t.pdfOfficial;
                 document.getElementById('pdf-t-dep').innerText = t.pdfDep;
                 document.getElementById('pdf-t-arr').innerText = t.pdfArr;
@@ -672,7 +559,6 @@
                 document.getElementById('pdf-t-baggage').innerText = t.pdfBaggage;
                 document.getElementById('pdf-t-price').innerText = t.pdfPrice;
                 document.getElementById('pdf-t-verify').innerText = t.pdfVerify;
-
                 document.getElementById('pdf-seat').innerText = t.pdfSeatVal;
                 document.getElementById('pdf-class').innerText = t.pdfClassVal;
                 document.getElementById('pdf-baggage').innerText = t.pdfBaggageVal;
@@ -712,7 +598,6 @@
         }
 
         document.getElementById('search-date').valueAsDate = new Date();
-        renderTrips(trips);
     </script>
 </body>
 </html>
