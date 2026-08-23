@@ -13,8 +13,8 @@
     <style>
         body { background-color: #0066ff; color: #fff; font-family: system-ui, -apple-system, sans-serif; }
         .main-card { background: #fff; color: #333; border-radius: 16px; padding: 24px; }
-        .bg-custom-blue { background-color: #0066ff; }
         .badge-custom { background-color: #e6f0ff; color: #0066ff; font-weight: 600; }
+        .bron-box { background-color: #f8f9fa; border-radius: 8px; padding: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -25,7 +25,7 @@
         <button class="btn btn-warning fw-bold text-white px-4" data-bs-toggle="modal" data-bs-target="#addModal">+ Reys kiritish</button>
     </div>
 
-    <!-- Main Banner & List -->
+    <!-- Main Content -->
     <div class="container my-4 text-center">
         <h1 class="fw-bold mb-4">Bu yerdan arzon safar chiptalarini sotib oling</h1>
         
@@ -62,7 +62,7 @@
                             </div>
                             <div class="col-6 mb-2">
                                 <label class="form-label small fw-bold">Bo'sh joylar</label>
-                                <input type="number" id="joy" class="form-control" placeholder="4" required>
+                                <input type="number" id="joy" class="form-control" placeholder="4" min="1" required>
                             </div>
                         </div>
                         <div class="row">
@@ -90,6 +90,35 @@
         </div>
     </div>
 
+    <!-- Bron Qilish Modali -->
+    <div class="modal fade text-dark" id="bronModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Reysni bron qilish</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bronForm">
+                        <input type="hidden" id="bronReysId">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Ismingiz</label>
+                            <input type="text" id="bronIsm" class="form-control" placeholder="Ismingizni kiriting" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Telefon raqamingiz</label>
+                            <input type="text" id="bronTel" class="form-control" placeholder="901234567" required>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                            <button type="submit" class="btn btn-primary fw-bold">Tasdiqlash</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
@@ -102,7 +131,7 @@
         }
         const db = firebase.database();
 
-        // 2. Yangi reysni Firebase'ga saqlash
+        // 2. Yangi reysni saqlash
         document.getElementById('reysForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -110,27 +139,69 @@
                 qayerdan: document.getElementById('qayerdan').value,
                 qayerga: document.getElementById('qayerga').value,
                 vaqt: document.getElementById('vaqt').value.replace('T', ' '),
-                joy: document.getElementById('joy').value,
+                joy: parseInt(document.getElementById('joy').value),
                 tel: document.getElementById('tel').value,
                 narx: Number(document.getElementById('narx').value).toLocaleString(),
-                mashina: document.getElementById('mashina').value
+                mashina: document.getElementById('mashina').value,
+                mijozlar: {}
             };
 
             db.ref('reyslar').push(newReys).then(() => {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
                 modal.hide();
                 document.getElementById('reysForm').reset();
-            }).catch(err => alert("Xatolik yuz berdi: " + err.message));
+            }).catch(err => alert("Xatolik: " + err.message));
         });
 
-        // 3. Reysni o'chirish funksiyasi
+        // 3. Bron modalini ochish
+        function openBronModal(key) {
+            document.getElementById('bronReysId').value = key;
+            const modal = new bootstrap.Modal(document.getElementById('bronModal'));
+            modal.show();
+        }
+
+        // 4. Bron qilish jarayoni
+        document.getElementById('bronForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const key = document.getElementById('bronReysId').value;
+            const ism = document.getElementById('bronIsm').value;
+            const tel = document.getElementById('bronTel').value;
+
+            const reysRef = db.ref('reyslar/' + key);
+
+            reysRef.transaction((reys) => {
+                if (reys) {
+                    if (reys.joy > 0) {
+                        reys.joy -= 1;
+                        if (!reys.mijozlar) reys.mijozlar = {};
+                        const newMijozKey = db.ref().child('reyslar').push().key;
+                        reys.mijozlar[newMijozKey] = { ism: ism, tel: tel };
+                    } else {
+                        alert("Kechirasiz, ushbu reysda bo'sh joy qolmagan!");
+                        return; // joy qolmagan bo'lsa to'xtatish
+                    }
+                }
+                return reys;
+            }, (error, committed) => {
+                if (error) {
+                    alert("Bron qilishda xatolik yuz berdi: " + error.message);
+                } else if (committed) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('bronModal'));
+                    modal.hide();
+                    document.getElementById('bronForm').reset();
+                    alert("Reys muvaffaqiyatli bron qilindi!");
+                }
+            });
+        });
+
+        // 5. Reysni o'chirish
         function deleteReys(key) {
             if (confirm("Ushbu e'lonni o'chirmoqchimisiz?")) {
                 db.ref('reyslar/' + key).remove();
             }
         }
 
-        // 4. Real-vaqtda barcha qurilmalarda ko'rsatish
+        // 6. Real-vaqtda ma'lumotlarni yuklash va chiqarish
         db.ref('reyslar').on('value', (snapshot) => {
             const container = document.getElementById('reyslarContainer');
             const data = snapshot.val();
@@ -143,6 +214,19 @@
 
             Object.keys(data).reverse().forEach((key) => {
                 const item = data[key];
+                
+                // Bron qilgan mijozlar ro'yxatini shakllantirish
+                let mijozlarHTML = '';
+                if (item.mijozlar) {
+                    Object.values(item.mijozlar).forEach(m => {
+                        mijozlarHTML += `<li class="small text-dark">👤 <b>${m.ism}</b> (📞 ${m.tel})</li>`;
+                    });
+                } else {
+                    mijozlarHTML = '<span class="small text-muted">Hozircha bron qilgan mijozlar yo\'q</span>';
+                }
+
+                const joyQolmagan = item.joy <= 0;
+
                 container.innerHTML += `
                     <div class="border rounded-4 p-3 mb-3 position-relative">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -155,12 +239,21 @@
                         <h4 class="fw-bold my-2">${item.qayerdan} ➔ ${item.qayerga}</h4>
                         <div class="text-muted small">
                             <div>📅 Vaqt: ${item.vaqt}</div>
-                            <div>💺 Bo'sh joylar: ${item.joy} ta</div>
+                            <div>💺 Bo'sh joylar: <strong class="${joyQolmagan ? 'text-danger' : 'text-success'}">${item.joy} ta</strong></div>
                             <div>📞 Haydovchi tel: ${item.tel}</div>
                         </div>
+
+                        <!-- Bron qilganlar ro'yxati -->
+                        <div class="bron-box border-top">
+                            <div class="fw-bold small text-secondary mb-1">👥 Bron qilgan mijozlar (Haydovchi uchun):</div>
+                            <ul class="list-unstyled mb-0 ms-2">${mijozlarHTML}</ul>
+                        </div>
+
                         <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
                             <button onclick="deleteReys('${key}')" class="btn btn-outline-danger btn-sm">E'lonni o'chirish</button>
-                            <button class="btn btn-primary px-4 fw-bold">Bron qilish</button>
+                            <button onclick="openBronModal('${key}')" class="btn btn-primary px-4 fw-bold" ${joyQolmagan ? 'disabled' : ''}>
+                                ${joyQolmagan ? 'Joy yo\'q' : 'Bron qilish'}
+                            </button>
                         </div>
                     </div>
                 `;
