@@ -138,6 +138,11 @@
 
         let currentUser = null;
 
+        // Redirect natijasini olish
+        auth.getRedirectResult().catch((error) => {
+            console.error("Redirect Auth Error:", error);
+        });
+
         auth.onAuthStateChanged((user) => {
             currentUser = user;
             const container = document.getElementById('authContainer');
@@ -158,9 +163,10 @@
             renderReyslar();
         });
 
+        // Redirect bilan avtorizatsiyadan o'tish (Telegram App uchun moslangan)
         function loginWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(err => alert("Xatolik: " + err.message));
+            auth.signInWithRedirect(provider);
         }
 
         function logout() {
@@ -242,7 +248,6 @@
         db.ref('reyslar').on('value', (snapshot) => {
             latestData = snapshot.val();
             
-            // Eski egasiz e'lonlarni avtomatik tozalash
             if (latestData) {
                 Object.keys(latestData).forEach(key => {
                     if (!latestData[key].ownerUid) {
@@ -271,8 +276,6 @@
 
             keys.reverse().forEach((key) => {
                 const item = latestData[key];
-                
-                // Shaxsiy kabinet maxfiyligi: Faqat e'lon egasiga mijozlar va o'chirish tugmasi ko'rinadi
                 const isOwner = currentUser && (item.ownerUid === currentUser.uid);
 
                 let mijozlarHTML = '';
