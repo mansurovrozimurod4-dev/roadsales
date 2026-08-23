@@ -8,7 +8,6 @@
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
@@ -23,9 +22,7 @@
     <!-- Header -->
     <div class="container py-3 d-flex justify-content-between align-items-center">
         <h3 class="fw-bold m-0 text-white">roadsales</h3>
-        <div id="authButtons" class="d-flex gap-2">
-            <!-- JavaScript orqali tugmalar chiqadi -->
-        </div>
+        <button class="btn btn-warning fw-bold text-white px-4" data-bs-toggle="modal" data-bs-target="#addModal">+ Reys kiritish</button>
     </div>
 
     <!-- Main Content -->
@@ -36,38 +33,6 @@
             <h4 class="fw-bold mb-4 text-dark">Mavjud reyslar</h4>
             <div id="reyslarContainer">
                 <p class="text-muted text-center py-4">Reyslar yuklanmoqda...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Kirish / Ro'yxatdan o'tish Modali -->
-    <div class="modal fade text-dark" id="authModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="authModalTitle">Tizimga kirish</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="authForm">
-                        <input type="hidden" id="authMode" value="login">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Email</label>
-                            <input type="email" id="authEmail" class="form-control" placeholder="example@mail.com" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Parol (kamida 6 ta belgi)</label>
-                            <input type="password" id="authPassword" class="form-control" placeholder="******" required minlength="6">
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mt-4">
-                            <a href="#" id="toggleAuthMode" class="small text-decoration-none">Ro'yxatdan o'tish</a>
-                            <div>
-                                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Bekor qilish</button>
-                                <button type="submit" id="authSubmitBtn" class="btn btn-primary fw-bold">Kirish</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
             </div>
         </div>
     </div>
@@ -157,108 +122,29 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // 1. Firebase Initsializatsiyasi
+        // 1. Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyC07A_DQLZfWSqUtwmv91gUlEg3mHroySU",
-            authDomain: "roadsales-d76af.firebaseapp.com",
-            databaseURL: "https://roadsales-d76af-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "roadsales-d76af",
-            storageBucket: "roadsales-d76af.firebasestorage.app",
-            messagingSenderId: "847332122916",
-            appId: "1:847332122916:web:cb559bc341b84805cf53b1",
-            measurementId: "G-W1M6V3817K"
+            databaseURL: "https://roadsales-d76af-default-rtdb.europe-west1.firebasedatabase.app"
         };
-
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.database();
-        const auth = firebase.auth();
 
-        let currentUser = null;
-
-        // 2. Auth Holatini Kuzatish
-        auth.onAuthStateChanged((user) => {
-            currentUser = user;
-            const authButtons = document.getElementById('authButtons');
-            if (user) {
-                authButtons.innerHTML = `
-                    <button class="btn btn-warning fw-bold text-white px-3" data-bs-toggle="modal" data-bs-target="#addModal">+ Reys kiritish</button>
-                    <button onclick="logout()" class="btn btn-outline-light btn-sm">Chiqish (${user.email.split('@')[0]})</button>
-                `;
-            } else {
-                authButtons.innerHTML = `
-                    <button onclick="openAuthModal('login')" class="btn btn-light fw-bold text-primary px-3">Kirish</button>
-                    <button onclick="openAuthModal('register')" class="btn btn-warning fw-bold text-white px-3">Ro'yxatdan o'tish</button>
-                `;
-            }
-            renderReyslar();
-        });
-
-        // 3. Auth Modal Funksiyalari
-        function openAuthModal(mode) {
-            const modal = new bootstrap.Modal(document.getElementById('authModal'));
-            setAuthMode(mode);
-            modal.show();
+        // Qurilma uchun maxsus ID olish/yaratish
+        let deviceId = localStorage.getItem('roadsales_device_id');
+        if (!deviceId) {
+            deviceId = 'dev_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('roadsales_device_id', deviceId);
         }
 
-        function setAuthMode(mode) {
-            document.getElementById('authMode').value = mode;
-            if (mode === 'login') {
-                document.getElementById('authModalTitle').innerText = 'Tizimga kirish';
-                document.getElementById('authSubmitBtn').innerText = 'Kirish';
-                document.getElementById('toggleAuthMode').innerText = "Akkauntingiz yo'qmi? Ro'yxatdan o'ting";
-            } else {
-                document.getElementById('authModalTitle').innerText = "Ro'yxatdan o'tish";
-                document.getElementById('authSubmitBtn').innerText = "Ro'yxatdan o'tish";
-                document.getElementById('toggleAuthMode').innerText = "Akkauntingiz bormi? Kirish";
-            }
-        }
-
-        document.getElementById('toggleAuthMode').addEventListener('click', (e) => {
-            e.preventDefault();
-            const currentMode = document.getElementById('authMode').value;
-            setAuthMode(currentMode === 'login' ? 'register' : 'login');
-        });
-
-        // 4. Kirish va Ro'yxatdan o'tish
-        document.getElementById('authForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            const mode = document.getElementById('authMode').value;
-
-            if (mode === 'login') {
-                auth.signInWithEmailAndPassword(email, password)
-                    .then(() => {
-                        bootstrap.Modal.getInstance(document.getElementById('authModal')).hide();
-                        document.getElementById('authForm').reset();
-                    })
-                    .catch(err => alert("Kirishda xatolik: " + err.message));
-            } else {
-                auth.createUserWithEmailAndPassword(email, password)
-                    .then(() => {
-                        bootstrap.Modal.getInstance(document.getElementById('authModal')).hide();
-                        document.getElementById('authForm').reset();
-                    })
-                    .catch(err => alert("Ro'yxatdan o'tishda xatolik: " + err.message));
-            }
-        });
-
-        function logout() {
-            auth.signOut();
-        }
-
-        // 5. Yangi reys saqlash
+        // 2. Yangi reysni saqlash (Qurilma ID biriktiriladi)
         document.getElementById('reysForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            if (!currentUser) {
-                alert("E'lon joylash uchun avval tizimga kiring!");
-                return;
-            }
-
+            
             const newReys = {
-                ownerUid: currentUser.uid,
+                ownerDeviceId: deviceId,
                 qayerdan: document.getElementById('qayerdan').value,
                 qayerga: document.getElementById('qayerga').value,
                 vaqt: document.getElementById('vaqt').value.replace('T', ' '),
@@ -276,7 +162,7 @@
             }).catch(err => alert("Xatolik: " + err.message));
         });
 
-        // 6. Bron Qilish
+        // 3. Bron Modal
         function openBronModal(key) {
             document.getElementById('bronReysId').value = key;
             const modal = new bootstrap.Modal(document.getElementById('bronModal'));
@@ -316,32 +202,27 @@
             });
         });
 
-        // 7. Reysni o'chirish
+        // 4. Reysni o'chirish
         function deleteReys(key) {
             if (confirm("Ushbu e'lonni o'chirmoqchimisiz?")) {
                 db.ref('reyslar/' + key).remove();
             }
         }
 
-        // 8. Reyslarni render qilish
-        let latestData = null;
+        // 5. E'lonlarni ko'rsatish
         db.ref('reyslar').on('value', (snapshot) => {
-            latestData = snapshot.val();
-            renderReyslar();
-        });
-
-        function renderReyslar() {
             const container = document.getElementById('reyslarContainer');
+            const data = snapshot.val();
             container.innerHTML = '';
 
-            if (!latestData) {
-                container.innerHTML = '<p class="text-muted text-center py-4">Hozircha faol reyslar yo\'q.</p>';
+            if (!data) {
+                container.innerHTML = '<p class="text-muted text-center py-4">Hozircha faol reyslar yo\'q. Yuqoridagi "+ Reys kiritish" tugmasini bosib e\'lon qo\'shing.</p>';
                 return;
             }
 
-            Object.keys(latestData).reverse().forEach((key) => {
-                const item = latestData[key];
-                const isOwner = currentUser && (currentUser.uid === item.ownerUid);
+            Object.keys(data).reverse().forEach((key) => {
+                const item = data[key];
+                const isOwner = (item.ownerDeviceId === deviceId);
 
                 let mijozlarHTML = '';
                 if (isOwner) {
@@ -388,7 +269,7 @@
                     </div>
                 `;
             });
-        }
+        });
     </script>
 </body>
 </html>
