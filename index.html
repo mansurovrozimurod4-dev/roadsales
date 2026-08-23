@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roadsales — Avtobus va Taksi Baza</title>
-    <<meta name="google-site-verification" content="3lOvnZM6Vu5nrqvB1TCU1YVosV_Ivpw5H5zaM1PXVmI" />>
+    <!-- PDF & QR Code Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -555,7 +555,6 @@
                     trip.badges.forEach(b => { badgeHTML += `<span class="aviasales-badge badge-${b.type}">${b.text}</span>`; });
                 }
 
-                // Mijozlar ro'yxatini shakllantirish
                 let customersHTML = '';
                 if (trip.bookedCustomers && trip.bookedCustomers.length > 0) {
                     trip.bookedCustomers.forEach(c => {
@@ -589,7 +588,6 @@
                             </div>
                         </div>
 
-                        <!-- Har bir e'lon tagida mijozlar ma'lumoti -->
                         <div class="trip-customers">
                             <div class="customers-title">👥 Bron qilgan mijozlar (Haydovchi uchun):</div>
                             <div class="customer-tags">
@@ -627,7 +625,7 @@
                 phone: document.getElementById('d-phone').value,
                 info: document.getElementById('d-info').value,
                 badges: [{ text: "✨ Yangi Reys", type: "cheap" }],
-                bookedCustomers: [] // Bron qilgan mijozlar ro'yxati
+                bookedCustomers: []
             };
             trips.unshift(newTrip);
             renderTrips(trips);
@@ -652,7 +650,6 @@
             if (trip && trip.seats > 0) {
                 trip.seats--;
                 
-                // Reys kartochkasining tagiga mijozni qo'shish
                 trip.bookedCustomers.push({
                     name: passengerName,
                     phone: passengerPhone
