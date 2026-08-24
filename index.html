@@ -23,6 +23,7 @@
         .btn-google:hover { background-color: #f8f9fa; }
         .reys-card { border: 1px solid #e9ecef; border-radius: 14px; padding: 18px; margin-bottom: 15px; transition: 0.2s; }
         .reys-card:hover { border-color: #0d6efd; box-shadow: 0 4px 12px rgba(13,110,253,0.1); }
+        .privacy-badge { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 6px; font-size: 0.8rem; padding: 4px 8px; }
     </style>
 </head>
 <body>
@@ -64,14 +65,15 @@
         </div>
     </div>
 
-    <!-- Ism-Familiya Modal (Google bilan birinchi marta kirganda) -->
+    <!-- Ism-Familiya Modal -->
     <div class="modal fade text-dark" id="profileModal" data-bs-backdrop="static" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Ma'lumotlaringizni kiriting</h5>
+                    <h5 class="modal-title fw-bold"><i class="bi bi-shield-check text-primary me-2"></i>Profil ma'lumotlaringiz</h5>
                 </div>
                 <div class="modal-body">
+                    <p class="small text-muted mb-3">Xavfsizlik va maxfiylikni ta'minlash uchun ism-familiyangiz va telefoningizni kiriting.</p>
                     <form id="profileForm">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Ismingiz va Familiyangiz</label>
@@ -108,7 +110,7 @@
                         </div>
                         <div class="row">
                             <div class="col-6 mb-2">
-                                <label class="form-label small fw-bold">Jo'nash kuni va vaqti</label>
+                                <label class="form-label small fw-bold">Jo'nash vaqti</label>
                                 <input type="datetime-local" id="vaqt" class="form-control" required>
                             </div>
                             <div class="col-6 mb-2">
@@ -118,7 +120,7 @@
                         </div>
                         <div class="row">
                             <div class="col-6 mb-2">
-                                <label class="form-label small fw-bold">Har bir o'rin narxi (UZS)</label>
+                                <label class="form-label small fw-bold">Narxi (UZS)</label>
                                 <input type="number" id="narx" class="form-control" placeholder="50000" required>
                             </div>
                             <div class="col-6 mb-2">
@@ -145,6 +147,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <p class="small text-muted mb-3"><i class="bi bi-lock-fill text-warning"></i> Telefon raqamingiz faqat haydovchiga ko'rinadi.</p>
                     <form id="bronForm">
                         <input type="hidden" id="bronReysId">
                         <div class="mb-3">
@@ -232,6 +235,16 @@
             auth.signOut().then(() => location.reload());
         }
 
+        // Telefon raqamini yashirish funksiyasi (Maxfiylik uchun)
+        function maskPhone(phone) {
+            if (!phone) return 'Yashiringan';
+            const clean = phone.replace(/\s+/g, '');
+            if (clean.length >= 9) {
+                return clean.substring(0, 4) + ' *** ** ' + clean.substring(clean.length - 2);
+            }
+            return '*** *** ***';
+        }
+
         document.getElementById('profileForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const fullName = document.getElementById('userFullName').value;
@@ -302,7 +315,7 @@
                         reys.joy -= 1;
                         if (!reys.mijozlar) reys.mijozlar = {};
                         const newKey = db.ref().child('reyslar').push().key;
-                        reys.mijozlar[newKey] = { ism: ism, tel: tel };
+                        reys.mijozlar[newKey] = { ism: ism, tel: tel, uid: currentUser ? currentUser.uid : 'anon' };
                     } else {
                         alert("Kechirasiz, joy qolmagan!");
                         return;
@@ -376,6 +389,15 @@
                 const item = allReyslar[key];
                 const isOwner = currentUser && (item.ownerUid === currentUser.uid);
 
+                // Ushbu reysni bron qilgan foydalanuvchimi?
+                let isBookedByUser = false;
+                if (currentUser && item.mijozlar) {
+                    isBookedByUser = Object.values(item.mijozlar).some(m => m.uid === currentUser.uid);
+                }
+
+                // Telefon raqamini ko'rsatish mantigi (Faqat egasiga yoki bron qilgan yo'lovchiga to'liq ko'rinadi)
+                const phoneDisplay = (isOwner || isBookedByUser) ? item.tel : maskPhone(item.tel);
+
                 let mijozlarHTML = '';
                 if (isOwner) {
                     if (item.mijozlar) {
@@ -402,7 +424,7 @@
                         <div class="text-muted small d-flex flex-wrap gap-3 my-2">
                             <div><i class="bi bi-calendar-event"></i> ${item.vaqt}</div>
                             <div><i class="bi bi-person-seat"></i> Bo'sh joy: <strong class="${joyQolmagan ? 'text-danger' : 'text-success'}">${item.joy} ta</strong></div>
-                            <div><i class="bi bi-telephone"></i> ${item.tel}</div>
+                            <div><i class="bi bi-telephone"></i> ${phoneDisplay} ${(isOwner || isBookedByUser) ? '' : '<span class="privacy-badge"><i class="bi bi-shield-lock"></i> Band qilgach ko\'rinadi</span>'}</div>
                         </div>
 
                         ${isOwner ? `
