@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RoadSales — Yo'lovchi va Haydovchilar Platlformasi</title>
+  <title>RoadSales — Yo'lovchi va Haydovchilar Platformasi</title>
   
-  <!-- PWA Manifest & Theme -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d6efd">
 
@@ -149,7 +148,7 @@
               </div>
               <div class="col-6">
                 <label class="form-label">Aloqa Telefon</label>
-                <input type="tel" id="userPhone" class="form-control" placeholder="+998901234567" pattern="^\+998[0-9]{9}$" title="Format: +998901234567" required>
+                <input type="tel" id="userPhone" class="form-control" placeholder="+998901234567" required>
               </div>
             </div>
           </div>
@@ -162,12 +161,10 @@
     </div>
   </div>
 
-  <!-- Bootstrap 5 JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
 
-  <!-- JavaScript Mantiq Kodlari -->
   <script>
-    // 1. Firebase Konfiguratsiyasi (O'zingiznikiga almashtiring!)
+    // 1. O'zingizning haqiqiy Firebase sozlamalaringizni shu yerga qo'ying:
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_AUTH_DOMAIN",
@@ -178,7 +175,6 @@
       appId: "YOUR_APP_ID"
     };
 
-    // Firebase Initsializatsiyasi
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
@@ -188,7 +184,7 @@
     let currentUser = null;
     let allReyslar = [];
 
-    // 2. Auth Holatini Kuzatish
+    // Auth holatini kuzatish
     auth.onAuthStateChanged(user => {
       currentUser = user;
       const authBtn = document.getElementById('authBtn');
@@ -207,22 +203,19 @@
       }
     });
 
-    // Mobile Redirect Auth natijasini ushlash
-    auth.getRedirectResult().catch(err => {
-      console.error("Redirect login xatoligi:", err);
-    });
-
-    // 3. Login / Logout Amallari (Pop-up o'rniga Redirect)
+    // Google Pop-up orqali kirish (Oldingi barqaror Usul)
     function handleAuthAction() {
       if (currentUser) {
         auth.signOut();
       } else {
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithRedirect(provider);
+        auth.signInWithPopup(provider).catch(error => {
+          alert("Kirishda xatolik yuz berdi: " + error.message);
+        });
       }
     }
 
-    // 4. Reyslarni Real-vaqtda Yuklab olish
+    // Reyslarni yuklab olish
     db.ref('reyslar').on('value', snapshot => {
       const data = snapshot.val();
       allReyslar = [];
@@ -232,9 +225,11 @@
         });
       }
       renderReyslar(allReyslar);
+    }, error => {
+      console.error("Baza yuklanishida xatolik:", error);
+      document.getElementById('reyslarContainer').innerHTML = '<div class="text-center py-5 text-danger">Ma\'lumotlarni yuklab bo\'lmadi. Firebase sozlamalarini tekshiring.</div>';
     });
 
-    // 5. Reyslarni Ekran Matniga Chiqarish (Render)
     function renderReyslar(list) {
       const container = document.getElementById('reyslarContainer');
       container.innerHTML = '';
@@ -250,10 +245,7 @@
         const itemTime = new Date(item.vaqt).getTime();
         const isExpired = itemTime < now;
         const isFull = item.boShJoy <= 0;
-
-        // Aniqroq Google Maps Linki
-        const queryText = `${item.aniqManzil ? item.aniqManzil + ', ' : ''}${item.qayerdan}, O'zbekiston`;
-        const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryText)}`;
+        const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.qayerdan + ' ' + (item.aniqManzil || ''))}`;
 
         const cardHtml = `
           <div class="col-md-6 col-lg-4">
@@ -290,7 +282,6 @@
       });
     }
 
-    // 6. Qidiruv / Filtr Funksiyasi
     function filterReyslar() {
       const qayerdan = document.getElementById('filterQayerdan').value;
       const qayerga = document.getElementById('filterQayerga').value;
@@ -304,7 +295,6 @@
       renderReyslar(filtered);
     }
 
-    // 7. Modalni Ochish
     function openCreateModal() {
       if (!currentUser) {
         alert("Reys e'lon qilish uchun avval tizimga kiring!");
@@ -315,7 +305,6 @@
       modal.show();
     }
 
-    // 8. Yangi Reys Saqlash
     function saveReys(event) {
       event.preventDefault();
       if (!currentUser) return;
@@ -344,7 +333,6 @@
       });
     }
 
-    // 9. Joy Bron Qilish (Transaction bilan poyga holatisiz safe)
     function bronQilish(reysId) {
       if (!currentUser) {
         alert("Bron qilish uchun tizimga kirishingiz kerak!");
@@ -354,31 +342,16 @@
 
       const reysRef = db.ref(`reyslar/${reysId}`);
       reysRef.transaction(reys => {
-        if (reys) {
-          if (reys.boShJoy > 0) {
-            reys.boShJoy--;
-          } else {
-            return; // Abort transaction
-          }
+        if (reys && reys.boShJoy > 0) {
+          reys.boShJoy--;
         }
         return reys;
       }, (error, committed) => {
-        if (error) {
-          alert("Bron qilishda xatolik yuz berdi.");
-        } else if (!committed) {
-          alert("Afsus, bo'sh joylar tugab qoldi!");
+        if (error || !committed) {
+          alert("Bron qilish iloji bo'lmadi.");
         } else {
-          alert("Joy muvaffaqiyatli bron qilindi! Haydovchi bilan bog'laning.");
+          alert("Joy muvaffaqiyatli bron qilindi!");
         }
-      });
-    }
-
-    // 10. Service Worker Ro'yxatdan o'tkazish (PWA uchun)
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker muvaffaqiyatli ulandi:', reg.scope))
-          .catch(err => console.log('Service Worker ulana olmadi:', err));
       });
     }
   </script>
