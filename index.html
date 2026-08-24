@@ -1,483 +1,829 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RoadSales — Yo'lovchi va Haydovchilar Platformasi</title>
-  
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- FontAwesome Icons -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  
-  <!-- Firebase JS SDK (v8) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadsales — Avtobus va Taksi Baza</title>
+    <!-- PDF & QR Code Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- Firebase JS SDK (v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-  <style>
-    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .hero-section { background: linear-gradient(135deg, #0d6efd, #0b5ed7); color: white; padding: 2.5rem 1rem; border-radius: 0 0 20px 20px; }
-    .card { border: none; border-radius: 12px; transition: transform 0.2s; }
-    .card:hover { transform: translateY(-3px); }
-    .badge-status { font-size: 0.85rem; padding: 0.4em 0.8em; }
-    .profile-img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #0c73fe; color: #1e293b; min-height: 100vh; position: relative; }
 
-    .custom-modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6);
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-    }
-    .custom-modal-content {
-      background: white;
-      border-radius: 12px;
-      width: 95%;
-      max-width: 500px;
-      padding: 20px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-  </style>
+        /* Top Navigation Header */
+        .navbar { max-width: 1200px; margin: 0 auto; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo-text { font-size: 32px; font-weight: 900; color: #ffffff; text-decoration: none; letter-spacing: -1px; }
+
+        .nav-menu { display: flex; align-items: center; gap: 18px; }
+        .nav-item { color: white; text-decoration: none; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; opacity: 0.95; }
+        .nav-svg { width: 18px; height: 18px; fill: currentColor; }
+
+        .btn-driver-toggle { background: #ff6d00; border: none; color: white; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .btn-auth { background: #ffffff; color: #0c73fe; border: none; padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .profile-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+
+        /* Hero & Search Widget */
+        .hero { max-width: 1100px; margin: 25px auto 0 auto; padding: 0 20px; text-align: center; color: white; }
+        .hero h1 { font-size: 38px; font-weight: 900; margin-bottom: 22px; letter-spacing: -0.5px; }
+
+        .aviasales-tabs-wrapper { display: flex; justify-content: center; margin-bottom: 15px; }
+        .aviasales-tabs { display: inline-flex; background: rgba(0, 0, 0, 0.18); padding: 5px; border-radius: 16px; backdrop-filter: blur(10px); gap: 4px; }
+        .tab-item { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 12px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .tab-item.active { background: #ffffff; color: #0c73fe; }
+        .tab-svg { width: 18px; height: 18px; fill: currentColor; }
+
+        /* Search Widget Box */
+        .search-widget { background: #ff6d00; padding: 8px; border-radius: 18px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); max-width: 1080px; margin: 0 auto; position: relative; }
+        .search-form { display: grid; grid-template-columns: 2fr 2fr 1.5fr 1.8fr auto; gap: 2px; border-radius: 12px; }
+        .form-group { background: white; padding: 10px 14px; display: flex; flex-direction: column; justify-content: center; text-align: left; position: relative; cursor: pointer; }
+        .form-group:first-child { border-radius: 10px 0 0 10px; }
+        .form-group label { font-size: 10px; font-weight: 800; color: #8b96a5; text-transform: uppercase; margin-bottom: 2px; }
+        .form-group input { border: none; outline: none; font-size: 15px; font-weight: 700; color: #1e293b; background: transparent; width: 100%; }
+        .sub-text { font-size: 11px; color: #64748b; font-weight: 600; }
+        .code-badge { position: absolute; right: 12px; top: 18px; font-size: 11px; font-weight: 800; color: #94a3b8; }
+        .btn-search { background: #ff6d00; color: white; border: none; padding: 0 28px; font-size: 18px; font-weight: 900; cursor: pointer; border-radius: 0 10px 10px 0; }
+
+        /* Dropdowns */
+        .city-dropdown { display: none; position: absolute; top: 100%; left: 0; width: 320px; background: white; border-radius: 16px; box-shadow: 0 15px 30px rgba(0,0,0,0.25); margin-top: 8px; z-index: 100; padding: 12px 0; text-align: left; color: #1e293b; }
+        .city-dropdown.active { display: block; }
+        .dropdown-header { font-size: 13px; font-weight: 800; padding: 8px 16px; color: #0f172a; border-bottom: 1px solid #f1f5f9; }
+        .city-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; transition: background 0.2s; }
+        .city-item:hover { background: #f8fafc; }
+        .city-name { font-weight: 800; font-size: 14px; color: #0f172a; }
+        .city-sub { font-size: 11px; color: #64748b; font-weight: 600; }
+
+        .passenger-popup { display: none; position: absolute; top: 100%; right: 0; width: 300px; background: white; border-radius: 16px; box-shadow: 0 15px 30px rgba(0,0,0,0.25); margin-top: 8px; z-index: 100; padding: 18px; color: #1e293b; text-align: left; }
+        .passenger-popup.active { display: block; }
+        .pass-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .pass-title { font-size: 14px; font-weight: 800; color: #0f172a; }
+        .pass-desc { font-size: 11px; color: #64748b; }
+        .counter-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #0c73fe; }
+        .counter-val { font-weight: 800; font-size: 15px; width: 24px; text-align: center; }
+
+        /* Feed Area */
+        .content-area { max-width: 1080px; margin: 30px auto 60px auto; padding: 0 20px; }
+        .driver-modal { display: none; background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .driver-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .driver-grid input, .driver-grid textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-weight: 600; font-size: 14px; }
+        .btn-submit-driver { grid-column: 1 / -1; background: #10b981; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 15px; cursor: pointer; }
+
+        .results-container { background: #f8fafc; border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        /* Trip Card Base */
+        .trip-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .trip-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; flex-wrap: wrap; }
+        .trip-info h3 { font-size: 22px; font-weight: 900; color: #0f172a; margin-bottom: 8px; }
+
+        .badge-group { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+        .aviasales-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+        .badge-car { background: #e0f2fe; color: #0284c7; }
+        .badge-cheap { background: #dcfce7; color: #15803d; }
+
+        .trip-price { font-size: 26px; font-weight: 900; color: #ff6d00; text-align: right; }
+        .btn-book { background: #0c73fe; color: white; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(12, 115, 254, 0.25); }
+        .btn-delete { background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer; margin-top: 8px; }
+
+        /* Reys Tagidagi Mijozlar Boli'mi (Inline) */
+        .trip-customers { margin-top: 15px; padding-top: 15px; border-top: 2px dashed #f1f5f9; }
+        .customers-title { font-size: 13px; font-weight: 800; color: #475569; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .customer-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .customer-tag { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px; }
+        .customer-phone { color: #0c73fe; text-decoration: none; font-weight: 800; background: #e0f2fe; padding: 2px 6px; border-radius: 4px; }
+        .empty-customers { font-size: 12px; color: #94a3b8; font-style: italic; }
+
+        /* Footer */
+        .site-footer { background: #ffffff; color: #1e293b; padding: 50px 0 0 0; border-top: 1px solid #e2e8f0; margin-top: 40px; }
+        .footer-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; gap: 30px; }
+        .footer-col h4 { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 10px; }
+        .footer-col ul li a { text-decoration: none; color: #64748b; font-size: 13px; font-weight: 600; transition: color 0.2s; }
+        .footer-col ul li a:hover { color: #0c73fe; }
+        
+        .footer-desc { font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 16px; font-weight: 500; }
+        .copyright-text { font-size: 13px; color: #64748b; font-weight: 700; }
+
+        .footer-bottom { border-top: 1px solid #f1f5f9; margin-top: 40px; padding: 20px 0; background: #f8fafc; }
+        .footer-bottom-inner { max-width: 1100px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #94a3b8; font-weight: 600; }
+
+        /* PDF TEMPLATE STYLES */
+        #pdf-wrapper { display: none; }
+        .pdf-page { width: 700px; background: #ffffff; padding: 25px; margin: 0 auto; box-sizing: border-box; }
+        .ticket-header { background: #0c73fe; border-radius: 14px; padding: 18px 22px; color: white; display: flex; justify-content: space-between; align-items: center; }
+        .ticket-header .brand { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; }
+        .ticket-header .pass-type { background: #ff6d00; padding: 6px 12px; border-radius: 16px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        
+        .route-hero { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; background: #f8fafc; padding: 18px; border-radius: 14px; border: 1px dashed #cbd5e1; }
+        .city-box .city { font-size: 20px; font-weight: 900; color: #0f172a; }
+        .city-box .lbl { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; }
+        
+        .details-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .info-card { background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 10px; }
+        .info-card .label { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+        .info-card .value { font-size: 13px; font-weight: 800; color: #1e293b; margin-top: 2px; }
+        
+        .qrcode-section { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 15px 20px; border-radius: 14px; }
+        .barcode-mock { height: 35px; width: 180px; background: repeating-linear-gradient(90deg, #000 0px, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 8px); }
+    </style>
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container">
-      <a class="navbar-brand fw-bold" href="#"><i class="fa-solid fa-car-side me-2"></i>RoadSales</a>
-      <div class="d-flex align-items-center gap-3">
-        <div id="userInfo" class="d-none d-flex align-items-center gap-2 text-white">
-          <img id="userAvatar" class="profile-img" src="" alt="User">
-          <span id="userName" class="fw-semibold small"></span>
-        </div>
-        <button id="authBtn" class="btn btn-light btn-sm fw-bold" onclick="handleAuthAction()">
-          <i class="fa-brands fa-google me-1"></i> Kirish
-        </button>
-      </div>
-    </div>
-  </nav>
+    <!-- Navbar -->
+    <div class="navbar">
+        <a href="#" class="logo-text">roadsales</a>
 
-  <!-- Hero Section -->
-  <div class="hero-section mb-4 text-center">
-    <div class="container">
-      <h2 class="fw-bold">Hamyonbop va qulay yo'llar</h2>
-      <p class="mb-3">O'zingizga mos reysni toping yoki o'z reysingizni e'lon qiling!</p>
-      
-      <div class="row g-2 justify-content-center bg-white p-3 rounded-4 shadow text-dark mx-auto" style="max-width: 800px;">
-        <div class="col-md-4">
-          <input type="text" id="filterQayerdan" class="form-control border-0 bg-light" placeholder="Qayerdan (Masalan: Toshkent)">
-        </div>
-        <div class="col-md-4">
-          <input type="text" id="filterQayerga" class="form-control border-0 bg-light" placeholder="Qayerga (Masalan: Andijon)">
-        </div>
-        <div class="col-md-4">
-          <button class="btn btn-primary w-100 fw-bold" onclick="filterReyslar()"><i class="fa-solid fa-magnifying-glass me-1"></i> Qidirish</button>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="nav-menu">
+            <button class="btn-driver-toggle" onclick="toggleDriverModal()">
+                <svg style="width: 14px; height: 14px; fill: white;" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                Reys kiritish
+            </button>
+            
+            <button id="authBtn" class="btn-auth" onclick="handleAuthAction()">
+                <span id="txt-nav-profile">Google Kirish</span>
+            </button>
 
-  <!-- Reyslar Ro'yxati -->
-  <div class="container mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4 class="fw-bold m-0"><i class="fa-solid fa-list-check me-2 text-primary"></i>Mavjud Reyslar</h4>
-      <button type="button" class="btn btn-success fw-bold shadow-sm" onclick="openCreateModal()">
-        <i class="fa-solid fa-plus me-1"></i> Reys E'lon Qilish
-      </button>
+            <a href="#" class="nav-item">
+                <svg class="nav-svg" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                <span id="txt-nav-passenger">Yo'lovchi</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="nav-svg" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                <span id="txt-nav-support">Qo'llab-quvvatlash</span>
+            </a>
+            <a href="#" class="nav-item" onclick="toggleLanguage()">🌐 UZS · <span id="current-lang-text">UZ</span></a>
+        </div>
     </div>
 
-    <div id="reyslarContainer" class="row g-4">
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-2 text-muted">Reyslar yuklanmoqda...</p>
-      </div>
+    <!-- Hero Header -->
+    <div class="hero">
+        <h1 id="txt-title">Bu yerdan arzon safar chiptalarini sotib oling</h1>
+
+        <div class="aviasales-tabs-wrapper">
+            <div class="aviasales-tabs">
+                <div class="tab-item active" id="txt-tab-1">
+                    <svg class="tab-svg" viewBox="0 0 24 24"><path d="M4 16c0 1.1.9 2 2 2h1v2c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-2h6v2c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-2h1c1.1 0 2-.9 2-2V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>
+                    Avtobus & Taksi
+                </div>
+                <div class="tab-item" id="txt-tab-2">
+                    <svg class="tab-svg" viewBox="0 0 24 24"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>
+                    Mehmonxonalar
+                </div>
+                <div class="tab-item" id="txt-tab-3">
+                    <svg class="tab-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                    Taassurotlar
+                </div>
+                <div class="tab-item" id="txt-tab-4">
+                    <svg class="tab-svg" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    Sevimlilar
+                </div>
+            </div>
+        </div>
+
+        <div class="search-widget">
+            <form class="search-form" onsubmit="filterTrips(event)">
+                <div class="form-group" onclick="event.stopPropagation()">
+                    <label id="lbl-from">Qayerdan</label>
+                    <input type="text" id="search-from" placeholder="Masalan: Dashtobod" oninput="filterCities('from')" onclick="toggleCityDropdown('from')">
+                    <span class="code-badge" id="code-from">---</span>
+                    <div class="city-dropdown" id="dropdown-from">
+                        <div class="dropdown-header" id="txt-popular-1">Ommabop shaharlar</div>
+                        <div class="city-item" onclick="selectCity('from', 'Dashtobod', 'DST')">
+                            <div><div class="city-name">Dashtobod</div><div class="city-sub">Jizzax viloyati</div></div>
+                        </div>
+                        <div class="city-item" onclick="selectCity('from', 'Guliston', 'GLS')">
+                            <div><div class="city-name">Guliston</div><div class="city-sub">Sirdaryo viloyati</div></div>
+                        </div>
+                        <div class="city-item" onclick="selectCity('from', 'Toshkent', 'TAS')">
+                            <div><div class="city-name">Toshkent</div><div class="city-sub">Poytaxt</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" onclick="event.stopPropagation()">
+                    <label id="lbl-to">Qayerga</label>
+                    <input type="text" id="search-to" placeholder="Masalan: Guliston" oninput="filterCities('to')" onclick="toggleCityDropdown('to')">
+                    <span class="code-badge" id="code-to">---</span>
+                    <div class="city-dropdown" id="dropdown-to">
+                        <div class="dropdown-header" id="txt-popular-2">Ommabop shaharlar</div>
+                        <div class="city-item" onclick="selectCity('to', 'Guliston', 'GLS')">
+                            <div><div class="city-name">Guliston</div><div class="city-sub">Sirdaryo viloyati</div></div>
+                        </div>
+                        <div class="city-item" onclick="selectCity('to', 'Dashtobod', 'DST')">
+                            <div><div class="city-name">Dashtobod</div><div class="city-sub">Jizzax viloyati</div></div>
+                        </div>
+                        <div class="city-item" onclick="selectCity('to', 'Toshkent', 'TAS')">
+                            <div><div class="city-name">Toshkent</div><div class="city-sub">Poytaxt</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label id="lbl-date">Sana</label>
+                    <input type="date" id="search-date">
+                </div>
+
+                <div class="form-group" onclick="togglePassengerPopup(event)">
+                    <label id="lbl-passengers-title">Yo'lovchilar</label>
+                    <input type="text" id="passenger-summary-input" value="1 yo'lovchi" readonly>
+                    <span class="sub-text" id="txt-class-sub">Iqtisodiyot</span>
+
+                    <div class="passenger-popup" id="passenger-popup-box" onclick="event.stopPropagation()">
+                        <div style="font-weight: 900; font-size: 16px; margin-bottom: 14px;" id="txt-pass-head">Yo'lovchilar soni</div>
+                        
+                        <div class="pass-row">
+                            <div>
+                                <div class="pass-title" id="txt-adults">Kattalar</div>
+                                <div class="pass-desc" id="txt-adults-sub">12 yosh va undan katta</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="counter-btn" onclick="updateCount('adults', -1)">-</button>
+                                <span class="counter-val" id="cnt-adults">1</span>
+                                <button type="button" class="counter-btn" onclick="updateCount('adults', 1)">+</button>
+                            </div>
+                        </div>
+
+                        <div class="pass-row">
+                            <div>
+                                <div class="pass-title" id="txt-children">Bolalar</div>
+                                <div class="pass-desc" id="txt-kids-sub">2 yoshdan 11 yoshgacha</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="counter-btn" onclick="updateCount('children', -1)">-</button>
+                                <span class="counter-val" id="cnt-children">0</span>
+                                <button type="button" class="counter-btn" onclick="updateCount('children', 1)">+</button>
+                            </div>
+                        </div>
+
+                        <div class="pass-row">
+                            <div>
+                                <div class="pass-title" id="txt-infants">Chaqaloqlar</div>
+                                <div class="pass-desc" id="txt-infants-sub">2 yoshgacha, o'rindiqsiz</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="counter-btn" onclick="updateCount('infants', -1)">-</button>
+                                <span class="counter-val" id="cnt-infants">0</span>
+                                <button type="button" class="counter-btn" onclick="updateCount('infants', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-search" id="txt-search-btn">Topish</button>
+            </form>
+        </div>
     </div>
-  </div>
 
-  <!-- Reys Yaratish Modali -->
-  <div id="createReysModal" class="custom-modal">
-    <div class="custom-modal-content">
-      <div class="d-flex justify-content-between align-items-center pb-2 border-bottom mb-3">
-        <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-car me-2"></i>Yangi Reys Yaratish</h5>
-        <button type="button" class="btn-close" onclick="closeModal('createReysModal')"></button>
-      </div>
-      <form id="createReysForm" onsubmit="saveReys(event)">
-        <div class="row g-3">
-          <div class="col-6">
-            <label class="form-label font-weight-bold">Qayerdan</label>
-            <input type="text" id="qayerdan" class="form-control" placeholder="Jizzax" required>
-          </div>
-          <div class="col-6">
-            <label class="form-label font-weight-bold">Qayerga</label>
-            <input type="text" id="qayerga" class="form-control" placeholder="Guliston" required>
-          </div>
-          <div class="col-12">
-            <label class="form-label">Aniq Manzil / Mo'ljal</label>
-            <input type="text" id="aniqManzil" class="form-control" placeholder="Markaziy avtovokzal" required>
-          </div>
-          <div class="col-6">
-            <label class="form-label">Jo'nash Vaqti</label>
-            <input type="datetime-local" id="vaqt" class="form-control" required>
-          </div>
-          <div class="col-6">
-            <label class="form-label">Bo'sh Joy Soni</label>
-            <input type="number" id="boShJoy" class="form-control" min="1" max="8" value="4" required>
-          </div>
-          <div class="col-6">
-            <label class="form-label">Narx (SO'M)</label>
-            <input type="number" id="narx" class="form-control" placeholder="50000" step="1000" required>
-          </div>
-          <div class="col-6">
-            <label class="form-label">Aloqa Telefon</label>
-            <input type="tel" id="userPhone" class="form-control" placeholder="+998901234567" required>
-          </div>
+    <!-- Feed & Driver Form -->
+    <div class="content-area">
+        <div class="driver-modal" id="driverModal">
+            <h2 id="txt-add-title">🚗 Yangi reys e'lon qilish</h2>
+            <form onsubmit="addTrip(event)">
+                <div class="driver-grid">
+                    <input type="text" id="d-from" placeholder="Qayerdan (masalan: Dashtobod)" required>
+                    <input type="text" id="d-to" placeholder="Qayerga (masalan: Guliston)" required>
+                    <input type="datetime-local" id="d-time" required>
+                    <input type="number" id="d-seats" placeholder="Bo'sh joylar soni" min="1" required>
+                    <input type="number" id="d-price" placeholder="Narxi (UZS)" required>
+                    <input type="text" id="d-car" placeholder="Mashina rusumi va davlat raqami" required>
+                    <input type="tel" id="d-phone" placeholder="Telefon raqamingiz" required>
+                    <textarea id="d-info" style="grid-column: 1 / -1;" placeholder="Qo'shimcha qulayliklar"></textarea>
+                    <button type="submit" class="btn-submit-driver" id="txt-publish-btn">E'lonni chop etish</button>
+                </div>
+            </form>
         </div>
-        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
-          <button type="button" class="btn btn-secondary" onclick="closeModal('createReysModal')">Bekor qilish</button>
-          <button type="submit" id="submitBtn" class="btn btn-success"><i class="fa-solid fa-check me-1"></i> E'lon qilish</button>
+
+        <!-- Trips Feed -->
+        <div class="results-container">
+            <h2 style="font-size: 18px; font-weight: 900; margin-bottom: 15px; color: #0f172a;" id="txt-results-title">Mavjud reyslar</h2>
+            <div id="trips-list"></div>
         </div>
-      </form>
     </div>
-  </div>
 
-  <!-- Bron Qilish Modali -->
-  <div id="bronModal" class="custom-modal">
-    <div class="custom-modal-content">
-      <div class="d-flex justify-content-between align-items-center pb-2 border-bottom mb-3">
-        <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-ticket me-2"></i>Reysni Bron Qilish</h5>
-        <button type="button" class="btn-close" onclick="closeModal('bronModal')"></button>
-      </div>
-      <form id="bronForm" onsubmit="confirmBron(event)">
-        <input type="hidden" id="selectedReysId">
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Ism va Familiyangiz</label>
-          <input type="text" id="passengerName" class="form-control" placeholder="Masalan: Ali Valiyev" required>
+    <!-- Extended Rich Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div>
+                <a href="#" class="logo-text" style="color:#0c73fe; display:block; margin-bottom:12px;">roadsales</a>
+                <p class="footer-desc" id="txt-footer-desc">O'zbekiston bo'ylab eng arzon avtobus va taksi chiptalarini bir zumda qidirish hamda qulay bron qilish xizmati.</p>
+                <div class="copyright-text">© 2026 Roadsales Inc.</div>
+            </div>
+
+            <div class="footer-col">
+                <h4 id="f-head-1">Yo'nalishlar</h4>
+                <ul>
+                    <li><a href="#">Dashtobod — Guliston</a></li>
+                    <li><a href="#">Toshkent — Samarqand</a></li>
+                    <li><a href="#">Toshkent — Buxoro</a></li>
+                    <li><a href="#">Toshkent — Farg'ona</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4 id="f-head-2">Xizmatlar</h4>
+                <ul>
+                    <li><a href="#">Avtobus chiptalari</a></li>
+                    <li><a href="#">Shaharlararo Taksi</a></li>
+                    <li><a href="#">Mehmonxonalar</a></li>
+                    <li><a href="#">Haydovchi bo'lish</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4 id="f-head-3">Kompaniya</h4>
+                <ul>
+                    <li><a href="#">Biz haqimizda</a></li>
+                    <li><a href="#">Vakansiyalar</a></li>
+                    <li><a href="#">Press-tsentr</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4 id="f-head-4">Yordam</h4>
+                <ul>
+                    <li><a href="#">Qo'llab-quvvatlash</a></li>
+                    <li><a href="#">Chiptani qaytarish</a></li>
+                    <li><a href="#">Maxfiylik siyosati</a></li>
+                </ul>
+            </div>
         </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Telefon Raqamingiz</label>
-          <input type="tel" id="passengerPhone" class="form-control" placeholder="+998901234567" required>
+
+        <div class="footer-bottom">
+            <div class="footer-bottom-inner">
+                <span id="txt-bottom-info">Roadsales — Chiptalarni izlash tizimi. Barcha huquqlar himoyalangan.</span>
+                <span>O'zbekiston, Toshkent s.</span>
+            </div>
         </div>
-        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
-          <button type="button" class="btn btn-secondary" onclick="closeModal('bronModal')">Bekor qilish</button>
-          <button type="submit" id="bronSubmitBtn" class="btn btn-primary"><i class="fa-solid fa-check me-1"></i> Tasdiqlash va Bron qilish</button>
+    </footer>
+
+    <!-- PDF CHIPTA TEMPLATE -->
+    <div id="pdf-wrapper">
+        <div class="pdf-page" id="pdf-page-1">
+            <div class="ticket-header">
+                <div class="brand">roadsales</div>
+                <div class="pass-type" id="pdf-t-official">Rasmiy Safar Chiptasi</div>
+            </div>
+            
+            <div class="route-hero">
+                <div class="city-box">
+                    <div class="lbl" id="pdf-t-dep">Jo'nash Manzili</div>
+                    <div class="city" id="pdf-from">--</div>
+                </div>
+                <div style="font-size: 24px; color: #0c73fe; font-weight: 900;">➔</div>
+                <div class="city-box">
+                    <div class="lbl" id="pdf-t-arr">Manzil</div>
+                    <div class="city" id="pdf-to">--</div>
+                </div>
+            </div>
+
+            <div class="details-grid">
+                <div class="info-card"><div class="label" id="pdf-t-passenger">Yo'lovchi</div><div class="value" id="pdf-passenger">--</div></div>
+                <div class="info-card"><div class="label" id="pdf-t-id">Chipta ID</div><div class="value" id="pdf-id">--</div></div>
+                <div class="info-card"><div class="label" id="pdf-t-date">Sana va Vaqt</div><div class="value" id="pdf-time">--</div></div>
+                <div class="info-card"><div class="label" id="pdf-t-car">Avtomobil</div><div class="value" id="pdf-car">--</div></div>
+                <div class="info-card"><div class="label" id="pdf-t-phone">Yo'lovchi tel</div><div class="value" id="pdf-phone">--</div></div>
+                <div class="info-card"><div class="label" id="pdf-t-seat">O'rindiq №</div><div class="value" id="pdf-seat">02 (Deraza yonida)</div></div>
+                <div class="info-card"><div class="label" id="pdf-t-class">Tarif Turi</div><div class="value" id="pdf-class">Iqtisodiyot (Standard)</div></div>
+                <div class="info-card"><div class="label" id="pdf-t-baggage">Bagaj Ruxsati</div><div class="value" id="pdf-baggage">1 ta Chamadon (20kg)</div></div>
+                <div class="info-card"><div class="label" id="pdf-t-price">Jami Narxi</div><div class="value" style="color: #ff6d00;" id="pdf-price">-- UZS</div></div>
+            </div>
+
+            <div class="qrcode-section">
+                <div>
+                    <div style="font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 6px;" id="pdf-t-verify">VERIFIKATSIYA KODI</div>
+                    <div class="barcode-mock"></div>
+                </div>
+                <div id="qrcode"></div>
+            </div>
         </div>
-      </form>
     </div>
-  </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyA6WojPCfBI8pPdLLFi7rRP-lxgbkmEhbk",
-      authDomain: "roadsales-f1e34.firebaseapp.com",
-      databaseURL: "https://roadsales-f1e34-default-rtdb.firebaseio.com",
-      projectId: "roadsales-f1e34",
-      storageBucket: "roadsales-f1e34.firebasestorage.app",
-      messagingSenderId: "579412038379",
-      appId: "1:579412038379:web:7d048d4331cbfd8372a4ae"
-    };
+    <script>
+        // FIREBASE INITIALIZATION
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6WojPCfBI8pPdLLFi7rRP-lxgbkmEhbk",
+            authDomain: "roadsales-f1e34.firebaseapp.com",
+            databaseURL: "https://roadsales-f1e34-default-rtdb.firebaseio.com",
+            projectId: "roadsales-f1e34",
+            storageBucket: "roadsales-f1e34.firebasestorage.app",
+            messagingSenderId: "579412038379",
+            appId: "1:579412038379:web:7d048d4331cbfd8372a4ae"
+        };
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    const auth = firebase.auth();
-    const db = firebase.database();
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.database();
 
-    let currentUser = null;
-    let allReyslar = [];
+        let currentUser = null;
+        let currentLang = 'uz';
+        let passengerCounts = { adults: 1, children: 0, infants: 0 };
+        let trips = [];
 
-    // Foydalanuvchi tizimga kirganini kuzatish
-    auth.onAuthStateChanged(user => {
-      currentUser = user;
-      const authBtn = document.getElementById('authBtn');
-      const userInfo = document.getElementById('userInfo');
-
-      if (user) {
-        authBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket me-1"></i> Chiqish';
-        authBtn.classList.replace("btn-light", "btn-outline-light");
-        userInfo.classList.remove('d-none');
-        document.getElementById('userName').innerText = user.displayName || 'Foydalanuvchi';
-        document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/35';
-      } else {
-        authBtn.innerHTML = '<i class="fa-brands fa-google me-1"></i> Kirish';
-        authBtn.classList.replace("btn-outline-light", "btn-light");
-        userInfo.classList.add('d-none');
-      }
-      renderReyslar(allReyslar);
-    });
-
-    function handleAuthAction(autoOpenModal = false) {
-      if (currentUser) {
-        auth.signOut();
-      } else {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider)
-          .then(() => {
-            if (autoOpenModal) {
-              document.getElementById('createReysModal').style.display = 'flex';
+        // Auth Listener
+        auth.onAuthStateChanged(user => {
+            currentUser = user;
+            const profileText = document.getElementById('txt-nav-profile');
+            if (user) {
+                profileText.innerHTML = `<img src="${user.photoURL || 'https://via.placeholder.com/28'}" class="profile-avatar"> Chiqish`;
+            } else {
+                profileText.innerText = "Google Kirish";
             }
-          })
-          .catch(error => {
-            alert("Kirishda xatolik yuz berdi: " + error.message);
-          });
-      }
-    }
-
-    // Bazadan reyslarni real vaqtda olish va tinglash
-    db.ref('reyslar').on('value', snapshot => {
-      const data = snapshot.val();
-      allReyslar = [];
-      if (data) {
-        Object.keys(data).forEach(key => {
-          allReyslar.push({ id: key, ...data[key] });
+            renderTrips(trips);
         });
-      }
-      renderReyslar(allReyslar);
-    }, error => {
-      console.error("Bazadan yuklashda xatolik:", error);
-    });
 
-    // Reyslarni ekranga chiqarish
-    function renderReyslar(list) {
-      const container = document.getElementById('reyslarContainer');
-      container.innerHTML = '';
-
-      if (list.length === 0) {
-        container.innerHTML = '<div class="text-center py-5 text-muted">Hozircha hech qanday reys topilmadi.</div>';
-        return;
-      }
-
-      list.slice().reverse().forEach(item => {
-        const isFull = item.boShJoy <= 0;
-        const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.qayerdan + ' ' + (item.aniqManzil || ''))}`;
-        const formatVaqt = item.vaqt ? new Date(item.vaqt).toLocaleString('uz-UZ') : 'Vaqt ko\'rsatilmadi';
-
-        const isOwner = currentUser && currentUser.uid === item.driverUid;
-        
-        let userPassKey = null;
-        if (currentUser && item.passengers) {
-          userPassKey = Object.keys(item.passengers).find(k => item.passengers[k].uid === currentUser.uid);
-        }
-        const hasBooked = !!userPassKey;
-
-        let passengersHtml = '';
-        if (isOwner && item.passengers) {
-          const passList = Object.values(item.passengers);
-          passengersHtml = `
-            <div class="mt-3 pt-2 border-top bg-light p-2 rounded">
-              <strong class="text-success small"><i class="fa-solid fa-users me-1"></i> Bron qilgan yo'lovchilar (${passList.length} ta):</strong>
-              <ul class="list-unstyled mb-0 mt-1 small">
-                ${passList.map(p => `
-                  <li class="d-flex justify-content-between border-bottom py-1">
-                    <span><strong>${p.name}</strong></span>
-                    <a href="tel:${p.phone}" class="text-decoration-none fw-bold"><i class="fa-solid fa-phone me-1"></i>${p.phone}</a>
-                  </li>
-                `).join('')}
-              </ul>
-            </div>
-          `;
+        function handleAuthAction() {
+            if (currentUser) {
+                auth.signOut();
+            } else {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                auth.signInWithPopup(provider).catch(err => alert("Xatolik: " + err.message));
+            }
         }
 
-        let actionButtonHtml = '';
-        if (isOwner) {
-          actionButtonHtml = `
-            <button onclick="deleteReys('${item.id}')" class="btn btn-outline-danger btn-sm flex-fill fw-bold">
-              <i class="fa-solid fa-trash me-1"></i> E'lonni o'chirish
-            </button>`;
-        } else if (hasBooked) {
-          actionButtonHtml = `
-            <button onclick="cancelBron('${item.id}', '${userPassKey}')" class="btn btn-warning btn-sm flex-fill fw-bold text-dark">
-              <i class="fa-solid fa-xmark me-1"></i> Bronni bekor qilish
-            </button>`;
-        } else {
-          actionButtonHtml = `
-            <button onclick="openBronModal('${item.id}')" class="btn btn-primary btn-sm flex-fill fw-bold" ${isFull ? 'disabled' : ''}>
-              <i class="fa-solid fa-ticket me-1"></i> ${isFull ? 'Joy qolmagan' : 'Bron Qilish'}
-            </button>`;
-        }
-
-        const cardHtml = `
-          <div class="col-md-6 col-lg-4">
-            <div class="card h-100 shadow-sm border-0">
-              <div class="card-body d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                  <h5 class="fw-bold text-primary m-0">${item.qayerdan} &rarr; ${item.qayerga}</h5>
-                  <span class="badge ${isFull ? 'bg-danger' : 'bg-success'} badge-status">
-                    ${isFull ? 'Joy yo\'q' : item.boShJoy + ' ta joy bor'}
-                  </span>
-                </div>
-                
-                <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot text-danger me-1"></i> ${item.aniqManzil || 'Ko\'rsatilmagan'}</p>
-                <p class="small mb-1"><i class="fa-regular fa-clock me-1"></i> <strong>Vaqt:</strong> ${formatVaqt}</p>
-                <p class="small mb-1"><i class="fa-solid fa-tag me-1 text-warning"></i> <strong>Narx:</strong> ${Number(item.narx).toLocaleString()} so'm</p>
-                <p class="small mb-1"><i class="fa-solid fa-user me-1 text-secondary"></i> <strong>Haydovchi:</strong> ${item.driverName || 'Anonim'}</p>
-                <p class="small mb-2"><i class="fa-solid fa-phone me-1 text-success"></i> <strong>Tel:</strong> <a href="tel:${item.userPhone}" class="fw-bold text-decoration-none text-dark">${item.userPhone}</a></p>
-                
-                ${passengersHtml}
-
-                <div class="mt-auto pt-3 border-top d-flex gap-2">
-                  <a href="${mapSearchUrl}" target="_blank" class="btn btn-outline-secondary btn-sm">
-                    <i class="fa-solid fa-map-location-dot"></i>
-                  </a>
-                  ${actionButtonHtml}
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-        container.insertAdjacentHTML('beforeend', cardHtml);
-      });
-    }
-
-    // Reysni saqlash funksiyasi
-    function saveReys(event) {
-      event.preventDefault();
-
-      const user = auth.currentUser;
-      if (!user) {
-        alert("E'lon berish uchun avval Google hisobingiz bilan tizimga kiring!");
-        return;
-      }
-
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true;
-      submitBtn.innerText = "Saqlanmoqda...";
-
-      const newReys = {
-        driverUid: user.uid,
-        driverName: user.displayName || 'Haydovchi',
-        qayerdan: document.getElementById('qayerdan').value.trim(),
-        qayerga: document.getElementById('qayerga').value.trim(),
-        aniqManzil: document.getElementById('aniqManzil').value.trim(),
-        vaqt: document.getElementById('vaqt').value,
-        boShJoy: parseInt(document.getElementById('boShJoy').value),
-        narx: document.getElementById('narx').value,
-        userPhone: document.getElementById('userPhone').value.trim(),
-        createdAt: firebase.database.ServerValue.TIMESTAMP
-      };
-
-      db.ref('reyslar').push(newReys)
-        .then(() => {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> E\'lon qilish';
-          closeModal('createReysModal');
-          document.getElementById('createReysForm').reset();
-          alert("Reys muvaffaqiyatli e'lon qilindi!");
-        })
-        .catch(err => {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> E\'lon qilish';
-          alert("Saqlashda xatolik yuz berdi: " + err.message);
-          console.error("Save error:", err);
+        // Realtime Data Sync
+        db.ref('reyslar').on('value', snapshot => {
+            const data = snapshot.val();
+            trips = [];
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    const item = data[key];
+                    let customersList = [];
+                    if (item.bookedCustomers) {
+                        customersList = Object.values(item.bookedCustomers);
+                    }
+                    trips.push({
+                        id: key,
+                        ...item,
+                        bookedCustomers: customersList
+                    });
+                });
+            }
+            renderTrips(trips);
         });
-    }
 
-    function openBronModal(reysId) {
-      if (!currentUser) {
-        alert("Bron qilish uchun avval Google hisobingiz bilan tizimga kiring!");
-        handleAuthAction();
-        return;
-      }
-      document.getElementById('selectedReysId').value = reysId;
-      document.getElementById('passengerName').value = currentUser.displayName || '';
-      document.getElementById('bronModal').style.display = 'flex';
-    }
+        const i18n = {
+            uz: {
+                title: "Bu yerdan arzon safar chiptalarini sotib oling",
+                from: "Qayerdan", to: "Qayerga", date: "Sana", passengersTitle: "Yo'lovchilar",
+                search: "Topish", addTitle: "🚗 Yangi reys e'lon qilish", publishBtn: "E'lonni chop etish",
+                resultsTitle: "Mavjud reyslar", bookBtn: "Bron qilish",
+                profile: "Profil", passenger: "Yo'lovchi", support: "Qo'llab-quvvatlash",
+                popHeader: "Ommabop shaharlar", passHead: "Yo'lovchilar soni",
+                adults: "Kattalar", adultsSub: "12 yosh va undan katta",
+                children: "Bolalar", kidsSub: "2 yoshdan 11 yoshgacha",
+                infants: "Chaqaloqlar", infantsSub: "2 yoshgacha, o'rindiqsiz", classSub: "Iqtisodiyot",
+                footerDesc: "O'zbekiston bo'ylab eng arzon avtobus va taksi chiptalarini bir zumda qidirish hamda qulay bron qilish xizmati.",
+                fHead1: "Yo'nalishlar", fHead2: "Xizmatlar", fHead3: "Kompaniya", fHead4: "Yordam",
+                bottomInfo: "Roadsales — Chiptalarni izlash tizimi. Barcha huquqlar himoyalangan.",
+                pdfOfficial: "Rasmiy Safar Chiptasi", pdfDep: "Jo'nash Manzili", pdfArr: "Manzil",
+                pdfPass: "Yo'lovchi", pdfId: "Chipta ID", pdfDate: "Sana va Vaqt", pdfCar: "Avtomobil",
+                pdfPhone: "Yo'lovchi tel", pdfSeat: "O'rindiq №", pdfClass: "Tarif Turi", pdfBaggage: "Bagaj Ruxsati",
+                pdfPrice: "Jami Narxi", pdfVerify: "VERIFIKATSIYA KODI",
+                pdfSeatVal: "02 (Deraza yonida)",
+                pdfClassVal: "Iqtisodiyot (Standard)",
+                pdfBaggageVal: "1 ta Chamadon (20kg)"
+            },
+            ru: {
+                title: "Покупайте дешевые билеты на поездки здесь",
+                from: "Откуда", to: "Куда", date: "Дата", passengersTitle: "Пассажиры",
+                search: "Найти", addTitle: "🚗 Опубликовать новый рейс", publishBtn: "Опубликовать",
+                resultsTitle: "Доступные рейсы", bookBtn: "Забронировать",
+                profile: "Профиль", passenger: "Пассажир", support: "Поддержка",
+                popHeader: "Популярные города", passHead: "Количество пассажиров",
+                adults: "Взрослые", adultsSub: "12 лет и старше",
+                children: "Дети", kidsSub: "От 2 до 11 лет",
+                infants: "Младенцы", infantsSub: "До 2 лет, без места", classSub: "Эконом",
+                footerDesc: "Мгновенный поиск и удобное бронирование самых дешевых билетов на автобусы и такси по Узбекистану.",
+                fHead1: "Маршруты", fHead2: "Услуги", fHead3: "Компания", fHead4: "Помощь",
+                bottomInfo: "Roadsales — Система поиска билетов. Все права защищены.",
+                pdfOfficial: "Официальный Проездной Билет", pdfDep: "Пункт Отправления", pdfArr: "Пункт Назначения",
+                pdfPass: "Пассажир", pdfId: "ID Билета", pdfDate: "Дата и Время", pdfCar: "Автомобиль",
+                pdfPhone: "Тел. пассажира", pdfSeat: "Место №", pdfClass: "Тариф", pdfBaggage: "Багаж",
+                pdfPrice: "Итоговая цена", pdfVerify: "КОД ВЕРИФИКАЦИИ",
+                pdfSeatVal: "02 (У окна)",
+                pdfClassVal: "Эконом (Стандарт)",
+                pdfBaggageVal: "1 Чемодан (20кг)"
+            }
+        };
 
-    function confirmBron(event) {
-      event.preventDefault();
-      const reysId = document.getElementById('selectedReysId').value;
-      const name = document.getElementById('passengerName').value.trim();
-      const phone = document.getElementById('passengerPhone').value.trim();
+        function filterCities(type) {
+            const inputVal = document.getElementById(`search-${type}`).value.toLowerCase();
+            const dropdown = document.getElementById(`dropdown-${type}`);
+            const items = dropdown.querySelectorAll('.city-item');
+            dropdown.classList.add('active');
+            
+            if(inputVal.length >= 3) {
+                document.getElementById(`code-${type}`).innerText = inputVal.substring(0, 3).toUpperCase();
+            }
 
-      const btn = document.getElementById('bronSubmitBtn');
-      btn.disabled = true;
-
-      const reysRef = db.ref(`reyslar/${reysId}`);
-      
-      reysRef.transaction(reys => {
-        if (reys && reys.boShJoy > 0) {
-          reys.boShJoy--;
-          if (!reys.passengers) reys.passengers = {};
-          const newPassKey = 'pass_' + currentUser.uid;
-          reys.passengers[newPassKey] = {
-            uid: currentUser.uid,
-            name: name,
-            phone: phone,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-          };
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                item.style.display = text.includes(inputVal) ? 'flex' : 'none';
+            });
         }
-        return reys;
-      }, (error, committed) => {
-        btn.disabled = false;
-        if (error || !committed) {
-          alert("Bron qilishda xatolik yuz berdi yoki bo'sh joy qolmagan.");
-        } else {
-          closeModal('bronModal');
-          document.getElementById('bronForm').reset();
-          alert("Reys muvaffaqiyatli bron qilindi! Telefon raqamingiz haydovchiga yetkazildi.");
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'uz' ? 'ru' : 'uz';
+            document.getElementById('current-lang-text').innerText = currentLang.toUpperCase();
+            
+            const t = i18n[currentLang];
+            document.getElementById('txt-title').innerText = t.title;
+            document.getElementById('lbl-from').innerText = t.from;
+            document.getElementById('lbl-to').innerText = t.to;
+            document.getElementById('lbl-date').innerText = t.date;
+            document.getElementById('lbl-passengers-title').innerText = t.passengersTitle;
+            document.getElementById('txt-search-btn').innerText = t.search;
+            document.getElementById('txt-add-title').innerText = t.addTitle;
+            document.getElementById('txt-publish-btn').innerText = t.publishBtn;
+            document.getElementById('txt-results-title').innerText = t.resultsTitle;
+            if(!currentUser) document.getElementById('txt-nav-profile').innerText = t.profile;
+            document.getElementById('txt-nav-passenger').innerText = t.passenger;
+            document.getElementById('txt-nav-support').innerText = t.support;
+            document.getElementById('txt-popular-1').innerText = t.popHeader;
+            document.getElementById('txt-popular-2').innerText = t.popHeader;
+            document.getElementById('txt-pass-head').innerText = t.passHead;
+            document.getElementById('txt-adults').innerText = t.adults;
+            document.getElementById('txt-adults-sub').innerText = t.adultsSub;
+            document.getElementById('txt-children').innerText = t.children;
+            document.getElementById('txt-kids-sub').innerText = t.kidsSub;
+            document.getElementById('txt-infants').innerText = t.infants;
+            document.getElementById('txt-infants-sub').innerText = t.infantsSub;
+            document.getElementById('txt-class-sub').innerText = t.classSub;
+
+            document.getElementById('txt-footer-desc').innerText = t.footerDesc;
+            document.getElementById('f-head-1').innerText = t.fHead1;
+            document.getElementById('f-head-2').innerText = t.fHead2;
+            document.getElementById('f-head-3').innerText = t.fHead3;
+            document.getElementById('f-head-4').innerText = t.fHead4;
+            document.getElementById('txt-bottom-info').innerText = t.bottomInfo;
+
+            updatePassengerSummary();
+            renderTrips(trips);
         }
-      });
-    }
 
-    function cancelBron(reysId, passKey) {
-      if (!confirm("Haqiqatan ham bronni bekor qilmoqchimisiz?")) return;
-
-      const reysRef = db.ref(`reyslar/${reysId}`);
-      reysRef.transaction(reys => {
-        if (reys && reys.passengers && reys.passengers[passKey]) {
-          delete reys.passengers[passKey];
-          reys.boShJoy++;
+        function togglePassengerPopup(e) {
+            e.stopPropagation();
+            document.getElementById('passenger-popup-box').classList.toggle('active');
+            document.getElementById('dropdown-from').classList.remove('active');
+            document.getElementById('dropdown-to').classList.remove('active');
         }
-        return reys;
-      }, (error, committed) => {
-        if (error || !committed) {
-          alert("Bekor qilishda xatolik yuz berdi.");
-        } else {
-          alert("Broningiz bekor qilindi!");
+
+        function updateCount(type, delta) {
+            if (passengerCounts[type] + delta >= 0) {
+                if(type === 'adults' && passengerCounts[type] + delta < 1) return;
+                passengerCounts[type] += delta;
+                document.getElementById(`cnt-${type}`).innerText = passengerCounts[type];
+                updatePassengerSummary();
+            }
         }
-      });
-    }
 
-    function deleteReys(reysId) {
-      if (!confirm("Haqiqatan ham ushbu e'lonni o'chirib tashlamoqchimisiz?")) return;
-
-      db.ref(`reyslar/${reysId}`).remove()
-        .then(() => {
-          alert("E'lon o'chirildi.");
-        })
-        .catch(err => {
-          alert("O'chirishda xatolik: " + err.message);
-        });
-    }
-
-    function openCreateModal() {
-      if (!currentUser) {
-        if (confirm("Reys e'lon qilish uchun avval Google hisobingiz bilan kirishingiz kerak. Kirishni xohlaysizmi?")) {
-          handleAuthAction(true);
+        function updatePassengerSummary() {
+            const total = passengerCounts.adults + passengerCounts.children + passengerCounts.infants;
+            const word = currentLang === 'uz' ? 'yo\'lovchi' : 'пассажир';
+            document.getElementById('passenger-summary-input').value = `${total} ${word}`;
         }
-        return;
-      }
-      document.getElementById('createReysModal').style.display = 'flex';
-    }
 
-    function closeModal(modalId) {
-      document.getElementById(modalId).style.display = 'none';
-    }
+        function toggleCityDropdown(type) {
+            const dropdown = document.getElementById(`dropdown-${type}`);
+            dropdown.classList.toggle('active');
+            const other = type === 'from' ? 'to' : 'from';
+            document.getElementById(`dropdown-${other}`).classList.remove('active');
+            document.getElementById('passenger-popup-box').classList.remove('active');
+        }
 
-    function filterReyslar() {
-      const qayerdan = document.getElementById('filterQayerdan').value.toLowerCase().trim();
-      const qayerga = document.getElementById('filterQayerga').value.toLowerCase().trim();
+        function selectCity(type, cityName, code) {
+            document.getElementById(`search-${type}`).value = cityName;
+            document.getElementById(`code-${type}`).innerText = code;
+            document.getElementById(`dropdown-${type}`).classList.remove('active');
+        }
 
-      const filtered = allReyslar.filter(item => {
-        const matchQayerdan = qayerdan ? item.qayerdan.toLowerCase().includes(qayerdan) : true;
-        const matchQayerga = qayerga ? item.qayerga.toLowerCase().includes(qayerga) : true;
-        return matchQayerdan && matchQayerga;
-      });
+        window.onclick = function() {
+            document.getElementById('dropdown-from').classList.remove('active');
+            document.getElementById('dropdown-to').classList.remove('active');
+            document.getElementById('passenger-popup-box').classList.remove('active');
+        };
 
-      renderReyslar(filtered);
-    }
-  </script>
+        function renderTrips(data) {
+            const container = document.getElementById('trips-list');
+            if (!data || data.length === 0) {
+                container.innerHTML = `<p style="font-size: 14px; color: #64748b; font-weight: 600; text-align: center; padding: 20px 0;">Hozircha faol reyslar yo'q. Yuqoridagi "Reys kiritish" tugmasini bosib e'lon qo'shing.</p>`;
+                return;
+            }
+            container.innerHTML = '';
+            
+            data.slice().reverse().forEach((trip) => {
+                let badgeHTML = `<span class="aviasales-badge badge-car">🚗 ${trip.car}</span>`;
+                if(trip.badges) {
+                    trip.badges.forEach(b => { badgeHTML += `<span class="aviasales-badge badge-${b.type}">${b.text}</span>`; });
+                }
+
+                const isOwner = currentUser && currentUser.uid === trip.driverUid;
+
+                // Mijozlar ro'yxatini shakllantirish (Faqat egasiga ko'rinadi - Maxfiylik)
+                let customersHTML = '';
+                if (isOwner) {
+                    if (trip.bookedCustomers && trip.bookedCustomers.length > 0) {
+                        trip.bookedCustomers.forEach(c => {
+                            customersHTML += `
+                                <div class="customer-tag">
+                                    👤 <span>${c.name}:</span>
+                                    <a href="tel:${c.phone}" class="customer-phone">📞 ${c.phone}</a>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        customersHTML = `<span class="empty-customers">Hozircha bron qilgan mijozlar yo'q</span>`;
+                    }
+                } else {
+                    customersHTML = `<span class="empty-customers">Mijozlar ro'yxatini faqat e'lon egasi ko'ra oladi</span>`;
+                }
+
+                let deleteBtnHtml = isOwner ? `<br><button class="btn-delete" onclick="deleteTrip('${trip.id}')">E'lonni o'chirish</button>` : '';
+
+                container.innerHTML += `
+                    <div class="trip-card">
+                        <div class="trip-header">
+                            <div class="trip-info">
+                                <div class="badge-group">${badgeHTML}</div>
+                                <h3>${trip.from} ➔ ${trip.to}</h3>
+                                <div class="trip-details" style="font-size:13px; color:#64748b; line-height:1.6;">
+                                    📅 <strong>Vaqt:</strong> ${trip.time ? trip.time.replace('T', ' ') : 'Ko\'rsatilmadi'}<br>
+                                    💺 <strong>Bo'sh joylar:</strong> ${trip.seats} ta<br>
+                                    📞 <strong>Haydovchi tel:</strong> <a href="tel:${trip.phone}">${trip.phone}</a><br>
+                                    ℹ️ <strong>Ma'lumot:</strong> ${trip.info || 'Yo\'q'}
+                                </div>
+                            </div>
+                            <div class="trip-action">
+                                <div class="trip-price">${Number(trip.price).toLocaleString()} UZS</div>
+                                <button class="btn-book" onclick="bookTicket('${trip.id}')" ${trip.seats <= 0 ? 'disabled style="opacity:0.5"' : ''}>
+                                    ${trip.seats <= 0 ? 'Joy yo\'q' : i18n[currentLang].bookBtn}
+                                </button>
+                                ${deleteBtnHtml}
+                            </div>
+                        </div>
+
+                        <!-- Har bir e'lon tagida mijozlar ma'lumoti -->
+                        <div class="trip-customers">
+                            <div class="customers-title">👥 Bron qilgan mijozlar (Haydovchi uchun):</div>
+                            <div class="customer-tags">
+                                ${customersHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterTrips(e) {
+            e.preventDefault();
+            const from = document.getElementById('search-from').value.toLowerCase();
+            const to = document.getElementById('search-to').value.toLowerCase();
+            const filtered = trips.filter(t => t.from.toLowerCase().includes(from) && t.to.toLowerCase().includes(to));
+            renderTrips(filtered);
+        }
+
+        function toggleDriverModal() {
+            if (!currentUser) {
+                alert("Reys e'lon qilish uchun avval Google orqali tizimga kiring!");
+                handleAuthAction();
+                return;
+            }
+            const modal = document.getElementById('driverModal');
+            modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function addTrip(e) {
+            e.preventDefault();
+            if (!currentUser) {
+                alert("Avval tizimga kiring!");
+                return;
+            }
+
+            const newTrip = {
+                driverUid: currentUser.uid,
+                driverName: currentUser.displayName || 'Haydovchi',
+                from: document.getElementById('d-from').value.trim(),
+                to: document.getElementById('d-to').value.trim(),
+                time: document.getElementById('d-time').value,
+                seats: parseInt(document.getElementById('d-seats').value),
+                price: document.getElementById('d-price').value,
+                car: document.getElementById('d-car').value.trim(),
+                phone: document.getElementById('d-phone').value.trim(),
+                info: document.getElementById('d-info').value.trim(),
+                badges: [{ text: "✨ Yangi Reys", type: "cheap" }],
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            db.ref('reyslar').push(newTrip)
+                .then(() => {
+                    toggleDriverModal();
+                    alert("Reys e'lon qilindi va bazaga saqlandi!");
+                    e.target.reset();
+                })
+                .catch(err => alert("Xatolik: " + err.message));
+        }
+
+        function deleteTrip(tripId) {
+            if (confirm("Haqiqatan ham ushbu e'lonni o'chirmoqchimisiz?")) {
+                db.ref(`reyslar/${tripId}`).remove()
+                    .then(() => alert("E'lon o'chirildi!"))
+                    .catch(err => alert("O'chirishda xatolik: " + err.message));
+            }
+        }
+
+        function bookTicket(tripId) {
+            const isUz = currentLang === 'uz';
+            
+            const passengerName = prompt(isUz ? "Ism va familiyangizni kiriting:" : "Введите ваше имя и фамилию:");
+            if (!passengerName || passengerName.trim() === "") return;
+
+            const passengerPhone = prompt(isUz ? "Telefon raqamingizni kiriting (+998901234567):" : "Введите ваш номер телефона:");
+            if (!passengerPhone || passengerPhone.trim() === "") {
+                alert(isUz ? "Telefon raqam kiritilishi shart!" : "Номер телефона обязателен!");
+                return;
+            }
+
+            const tripRef = db.ref(`reyslar/${tripId}`);
+
+            tripRef.transaction(trip => {
+                if (trip && trip.seats > 0) {
+                    trip.seats--;
+                    if (!trip.bookedCustomers) trip.bookedCustomers = {};
+                    const newKey = 'cust_' + Date.now();
+                    trip.bookedCustomers[newKey] = {
+                        name: passengerName,
+                        phone: passengerPhone,
+                        userUid: currentUser ? currentUser.uid : 'anon'
+                    };
+                }
+                return trip;
+            }, (error, committed, snapshot) => {
+                if (error || !committed) {
+                    alert(isUz ? "Kechirasiz, bu reysda bo'sh joy qolmagan yoki xatolik yuz berdi!" : "Извините, свободных мест нет!");
+                } else {
+                    const trip = snapshot.val();
+                    const t = i18n[currentLang];
+                    
+                    document.getElementById('pdf-t-official').innerText = t.pdfOfficial;
+                    document.getElementById('pdf-t-dep').innerText = t.pdfDep;
+                    document.getElementById('pdf-t-arr').innerText = t.pdfArr;
+                    document.getElementById('pdf-t-passenger').innerText = t.pdfPass;
+                    document.getElementById('pdf-t-id').innerText = t.pdfId;
+                    document.getElementById('pdf-t-date').innerText = t.pdfDate;
+                    document.getElementById('pdf-t-car').innerText = t.pdfCar;
+                    document.getElementById('pdf-t-phone').innerText = t.pdfPhone;
+                    document.getElementById('pdf-t-seat').innerText = t.pdfSeat;
+                    document.getElementById('pdf-t-class').innerText = t.pdfClass;
+                    document.getElementById('pdf-t-baggage').innerText = t.pdfBaggage;
+                    document.getElementById('pdf-t-price').innerText = t.pdfPrice;
+                    document.getElementById('pdf-t-verify').innerText = t.pdfVerify;
+
+                    document.getElementById('pdf-seat').innerText = t.pdfSeatVal;
+                    document.getElementById('pdf-class').innerText = t.pdfClassVal;
+                    document.getElementById('pdf-baggage').innerText = t.pdfBaggageVal;
+
+                    document.getElementById('pdf-from').innerText = trip.from;
+                    document.getElementById('pdf-to').innerText = trip.to;
+                    document.getElementById('pdf-passenger').innerText = passengerName;
+                    document.getElementById('pdf-id').innerText = '#' + tripId.slice(-6);
+                    document.getElementById('pdf-time').innerText = trip.time ? trip.time.replace('T', ' ') : 'Ko\'rsatilmadi';
+                    document.getElementById('pdf-car').innerText = trip.car;
+                    document.getElementById('pdf-phone').innerText = passengerPhone;
+                    document.getElementById('pdf-price').innerText = Number(trip.price).toLocaleString() + ' UZS';
+
+                    document.getElementById('qrcode').innerHTML = "";
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: `Roadsales-Ticket-#${tripId}-${passengerName}-${passengerPhone}`,
+                        width: 70, height: 70
+                    });
+
+                    const element = document.getElementById('pdf-wrapper');
+                    element.style.display = 'block';
+
+                    const opt = {
+                        margin:       10,
+                        filename:     `Chipta_${passengerName}_${tripId.slice(-6)}.pdf`,
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, scrollY: 0 },
+                        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
+
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        element.style.display = 'none';
+                    });
+                }
+            });
+        }
+
+        document.getElementById('search-date').valueAsDate = new Date();
+    </script>
 </body>
 </html>
