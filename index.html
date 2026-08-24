@@ -84,7 +84,9 @@
   <div class="container mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h4 class="fw-bold m-0"><i class="fa-solid fa-list-check me-2 text-primary"></i>Mavjud Reyslar</h4>
-      <button class="btn btn-success fw-bold shadow-sm" onclick="openCreateModal()"><i class="fa-solid fa-plus me-1"></i> Reys E'lon Qilish</button>
+      <button class="btn btn-success fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createReysModal" onclick="checkAuthBeforeModal(event)">
+        <i class="fa-solid fa-plus me-1"></i> Reys E'lon Qilish
+      </button>
     </div>
 
     <div id="reyslarContainer" class="row g-4">
@@ -96,7 +98,7 @@
   </div>
 
   <!-- Reys Yaratish Modali -->
-  <div class="modal fade" id="createReysModal" tabindex="-1">
+  <div class="modal fade" id="createReysModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white">
@@ -161,10 +163,10 @@
     </div>
   </div>
 
+  <!-- Bootstrap 5 JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
 
   <script>
-    // YANGILANGAN FIREBASE SOZLAMALARI:
     const firebaseConfig = {
       apiKey: "AIzaSyA6WojPCfBI8pPdLLFi7rRP-lxgbkmEhbk",
       authDomain: "roadsales-f1e34.firebaseapp.com",
@@ -305,14 +307,13 @@
       renderReyslar(filtered);
     }
 
-    function openCreateModal() {
+    function checkAuthBeforeModal(e) {
       if (!currentUser) {
+        e.preventDefault();
+        e.stopPropagation();
         alert("Reys e'lon qilish uchun avval Google orqali tizimga kiring!");
         handleAuthAction();
-        return;
       }
-      const modal = new bootstrap.Modal(document.getElementById('createReysModal'));
-      modal.show();
     }
 
     function saveReys(event) {
@@ -335,7 +336,7 @@
       db.ref('reyslar').push(newReys).then(() => {
         const modalElement = document.getElementById('createReysModal');
         const modal = bootstrap.Modal.getInstance(modalElement);
-        modal.hide();
+        if (modal) modal.hide();
         document.getElementById('createReysForm').reset();
         alert("Reys muvaffaqiyatli e'lon qilindi!");
       }).catch(err => {
