@@ -85,7 +85,7 @@
   <div class="container mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h4 class="fw-bold m-0"><i class="fa-solid fa-list-check me-2 text-primary"></i>Mavjud Reyslar</h4>
-      <button class="btn btn-success fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createReysModal" onclick="checkAuthBeforeModal(event)">
+      <button class="btn btn-success fw-bold shadow-sm" onclick="openCreateModal()">
         <i class="fa-solid fa-plus me-1"></i> Reys E'lon Qilish
       </button>
     </div>
@@ -360,13 +360,14 @@
       renderReyslar(filtered);
     }
 
-    function checkAuthBeforeModal(e) {
+    function openCreateModal() {
       if (!currentUser) {
-        e.preventDefault();
-        e.stopPropagation();
         alert("Reys e'lon qilish uchun avval Google orqali tizimga kiring!");
         handleAuthAction();
+        return;
       }
+      const modal = new bootstrap.Modal(document.getElementById('createReysModal'));
+      modal.show();
     }
 
     function saveReys(event) {
