@@ -5,12 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RoadSales — Yo'lovchi va Haydovchilar Platformasi</title>
   
-  <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- FontAwesome Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   
-  <!-- Firebase JS SDK (v8) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -60,7 +57,7 @@
     </div>
   </nav>
 
-  <!-- Hero Section (Qidiruv) -->
+  <!-- Hero Section -->
   <div class="hero-section mb-4 text-center">
     <div class="container">
       <h2 class="fw-bold">Hamyonbop va qulay yo'llar</h2>
@@ -102,7 +99,7 @@
     <div class="custom-modal-content">
       <div class="d-flex justify-content-between align-items-center pb-2 border-bottom mb-3">
         <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-car me-2"></i>Yangi Reys Yaratish</h5>
-        <button type="button" class="btn-close" onclick="closeCreateModal()"></button>
+        <button type="button" class="btn-close" onclick="closeModal('createReysModal')"></button>
       </div>
       <form id="createReysForm" onsubmit="saveReys(event)">
         <div class="row g-3">
@@ -136,8 +133,33 @@
           </div>
         </div>
         <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
-          <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">Bekor qilish</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('createReysModal')">Bekor qilish</button>
           <button type="submit" id="submitBtn" class="btn btn-success"><i class="fa-solid fa-check me-1"></i> E'lon qilish</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bron Qilish Modali -->
+  <div id="bronModal" class="custom-modal">
+    <div class="custom-modal-content">
+      <div class="d-flex justify-content-between align-items-center pb-2 border-bottom mb-3">
+        <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-ticket me-2"></i>Reysni Bron Qilish</h5>
+        <button type="button" class="btn-close" onclick="closeModal('bronModal')"></button>
+      </div>
+      <form id="bronForm" onsubmit="confirmBron(event)">
+        <input type="hidden" id="selectedReysId">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Ism va Familiyangiz</label>
+          <input type="text" id="passengerName" class="form-control" placeholder="Masalan: Ali Valiyev" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Telefon Raqamingiz</label>
+          <input type="tel" id="passengerPhone" class="form-control" placeholder="+998901234567" required>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('bronModal')">Bekor qilish</button>
+          <button type="submit" id="bronSubmitBtn" class="btn btn-primary"><i class="fa-solid fa-check me-1"></i> Tasdiqlash va Bron qilish</button>
         </div>
       </form>
     </div>
@@ -163,7 +185,6 @@
     let currentUser = null;
     let allReyslar = [];
 
-    // Auth holatini kuzatish
     auth.onAuthStateChanged(user => {
       currentUser = user;
       const authBtn = document.getElementById('authBtn');
@@ -199,7 +220,6 @@
       }
     }
 
-    // Database'dan ma'lumotlarni o'qish
     db.ref('reyslar').on('value', snapshot => {
       const data = snapshot.val();
       allReyslar = [];
@@ -223,6 +243,28 @@
       list.slice().reverse().forEach(item => {
         const isFull = item.boShJoy <= 0;
         const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.qayerdan + ' ' + (item.aniqManzil || ''))}`;
+        const formatVaqt = item.vaqt ? new Date(item.vaqt).toLocaleString('uz-UZ') : 'Vaqt ko\'rsatilmadi';
+
+        // Haydovchi o'zi ko'rishi uchun mijozlar ro'yxatini shakllantirish
+        const isOwner = currentUser && currentUser.uid === item.driverUid;
+        let passengersHtml = '';
+
+        if (isOwner && item.passengers) {
+          const passList = Object.values(item.passengers);
+          passengersHtml = `
+            <div class="mt-3 pt-2 border-top bg-light p-2 rounded">
+              <strong class="text-success small"><i class="fa-solid fa-users me-1"></i> Bron qilgan yo'lovchilar (${passList.length} ta):</strong>
+              <ul class="list-unstyled mb-0 mt-1 small">
+                ${passList.map(p => `
+                  <li class="d-flex justify-content-between border-bottom py-1">
+                    <span><strong>${p.name}</strong></span>
+                    <a href="tel:${p.phone}" class="text-decoration-none fw-bold"><i class="fa-solid fa-phone me-1"></i>${p.phone}</a>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          `;
+        }
 
         const cardHtml = `
           <div class="col-md-6 col-lg-4">
@@ -236,18 +278,20 @@
                 </div>
                 
                 <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot text-danger me-1"></i> ${item.aniqManzil || 'Ko\'rsatilmagan'}</p>
-                <p class="small mb-1"><i class="fa-regular fa-clock me-1"></i> <strong>Vaqt:</strong> ${new Date(item.vaqt).toLocaleString('uz-UZ')}</p>
+                <p class="small mb-1"><i class="fa-regular fa-clock me-1"></i> <strong>Vaqt:</strong> ${formatVaqt}</p>
                 <p class="small mb-1"><i class="fa-solid fa-tag me-1 text-warning"></i> <strong>Narx:</strong> ${Number(item.narx).toLocaleString()} so'm</p>
                 <p class="small mb-1"><i class="fa-solid fa-user me-1 text-secondary"></i> <strong>Haydovchi:</strong> ${item.driverName || 'Anonim'}</p>
                 <p class="small mb-2"><i class="fa-solid fa-phone me-1 text-success"></i> <strong>Tel:</strong> <a href="tel:${item.userPhone}" class="fw-bold text-decoration-none text-dark">${item.userPhone}</a></p>
                 
+                ${passengersHtml}
+
                 <div class="mt-auto pt-3 border-top d-flex gap-2">
                   <a href="${mapSearchUrl}" target="_blank" class="btn btn-outline-danger btn-sm flex-fill">
                     <i class="fa-solid fa-map-location-dot me-1"></i> Xarita
                   </a>
-                  <a href="tel:${item.userPhone}" class="btn btn-primary btn-sm flex-fill fw-bold ${isFull ? 'disabled' : ''}">
-                    <i class="fa-solid fa-phone me-1"></i> Bog'lanish
-                  </a>
+                  <button onclick="openBronModal('${item.id}')" class="btn btn-primary btn-sm flex-fill fw-bold" ${isFull ? 'disabled' : ''}>
+                    <i class="fa-solid fa-ticket me-1"></i> ${isFull ? 'Joy qolmagan' : 'Bron Qilish'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -257,44 +301,73 @@
       });
     }
 
-    function filterReyslar() {
-      const qayerdan = document.getElementById('filterQayerdan').value.toLowerCase().trim();
-      const qayerga = document.getElementById('filterQayerga').value.toLowerCase().trim();
+    function openBronModal(reysId) {
+      if (!currentUser) {
+        alert("Bron qilish uchun avval Google hisobingiz bilan tizimga kiring!");
+        handleAuthAction();
+        return;
+      }
+      document.getElementById('selectedReysId').value = reysId;
+      document.getElementById('passengerName').value = currentUser.displayName || '';
+      document.getElementById('bronModal').style.display = 'flex';
+    }
 
-      const filtered = allReyslar.filter(item => {
-        const matchQayerdan = qayerdan ? item.qayerdan.toLowerCase().includes(qayerdan) : true;
-        const matchQayerga = qayerga ? item.qayerga.toLowerCase().includes(qayerga) : true;
-        return matchQayerdan && matchQayerga;
+    function confirmBron(event) {
+      event.preventDefault();
+      const reysId = document.getElementById('selectedReysId').value;
+      const name = document.getElementById('passengerName').value.trim();
+      const phone = document.getElementById('passengerPhone').value.trim();
+
+      const btn = document.getElementById('bronSubmitBtn');
+      btn.disabled = true;
+
+      const reysRef = db.ref(`reyslar/${reysId}`);
+      
+      reysRef.transaction(reys => {
+        if (reys && reys.boShJoy > 0) {
+          reys.boShJoy--;
+          if (!reys.passengers) reys.passengers = {};
+          const newPassKey = 'pass_' + Date.now();
+          reys.passengers[newPassKey] = {
+            uid: currentUser.uid,
+            name: name,
+            phone: phone,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+          };
+        }
+        return reys;
+      }, (error, committed) => {
+        btn.disabled = false;
+        if (error || !committed) {
+          alert("Bron qilishda xatolik yuz berdi yoki bo'sh joy qolmagan.");
+        } else {
+          closeModal('bronModal');
+          document.getElementById('bronForm').reset();
+          alert("Reys muvaffaqiyatli bron qilindi! Telefon raqamingiz haydovchiga yetkazildi.");
+        }
       });
-
-      renderReyslar(filtered);
     }
 
     function openCreateModal() {
       if (!currentUser) {
         if (confirm("Reys e'lon qilish uchun avval Google hisobingiz bilan kirishingiz kerak. Kirishni xohlaysizmi?")) {
-          handleAuthAction(true); // Kirgandan keyin modalni avtomatik ochadi
+          handleAuthAction(true);
         }
         return;
       }
       document.getElementById('createReysModal').style.display = 'flex';
     }
 
-    function closeCreateModal() {
-      document.getElementById('createReysModal').style.display = 'none';
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
     }
 
     function saveReys(event) {
       event.preventDefault();
-
-      if (!currentUser) {
-        alert("Kirish amalga oshirilmagan!");
-        return;
-      }
+      if (!currentUser) return;
 
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = true;
-      submitBtn.innerText = "Saqlanmoqda...";
 
       const newReys = {
         driverUid: currentUser.uid,
@@ -312,16 +385,26 @@
       db.ref('reyslar').push(newReys)
         .then(() => {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> E\'lon qilish';
-          closeCreateModal();
+          closeModal('createReysModal');
           document.getElementById('createReysForm').reset();
-          alert("Reys muvaffaqiyatli e'lon qilindi!");
         })
         .catch(err => {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> E\'lon qilish';
           alert("Xatolik: " + err.message);
         });
+    }
+
+    function filterReyslar() {
+      const qayerdan = document.getElementById('filterQayerdan').value.toLowerCase().trim();
+      const qayerga = document.getElementById('filterQayerga').value.toLowerCase().trim();
+
+      const filtered = allReyslar.filter(item => {
+        const matchQayerdan = qayerdan ? item.qayerdan.toLowerCase().includes(qayerdan) : true;
+        const matchQayerga = qayerga ? item.qayerga.toLowerCase().includes(qayerga) : true;
+        return matchQayerdan && matchQayerga;
+      });
+
+      renderReyslar(filtered);
     }
   </script>
 </body>
