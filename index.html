@@ -164,14 +164,15 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
 
   <script>
+    // YANGILANGAN FIREBASE SOZLAMALARI:
     const firebaseConfig = {
-      apiKey: "AIzaSy" + "ZTYzZDgwYzYtZGRiNi00NGJkLTI3YWExOTYwNTI3NWJj", 
-      authDomain: "roadsales-d76af.firebaseapp.com",
-      databaseURL: "https://roadsales-d76af-default-rtdb.firebaseio.com",
-      projectId: "roadsales-d76af",
-      storageBucket: "roadsales-d76af.appspot.com",
-      messagingSenderId: "847332122916",
-      appId: "1:847332122916:web:ZTYzZDgwYzYtZGRiNi00NGJkLTI3YWExOTYwNTI3NWJj"
+      apiKey: "AIzaSyA6WojPCfBI8pPdLLFi7rRP-lxgbkmEhbk",
+      authDomain: "roadsales-f1e34.firebaseapp.com",
+      databaseURL: "https://roadsales-f1e34-default-rtdb.firebaseio.com",
+      projectId: "roadsales-f1e34",
+      storageBucket: "roadsales-f1e34.firebasestorage.app",
+      messagingSenderId: "579412038379",
+      appId: "1:579412038379:web:7d048d4331cbfd8372a4ae"
     };
 
     if (!firebase.apps.length) {
@@ -183,7 +184,6 @@
     let currentUser = null;
     let allReyslar = [];
 
-    // Auth holati
     auth.onAuthStateChanged(user => {
       currentUser = user;
       const authBtn = document.getElementById('authBtn');
@@ -203,7 +203,6 @@
       renderReyslar(allReyslar);
     });
 
-    // Google bilan kirish
     function handleAuthAction() {
       if (currentUser) {
         auth.signOut();
@@ -215,7 +214,6 @@
       }
     }
 
-    // Database'dan yuklash
     db.ref('reyslar').on('value', snapshot => {
       const data = snapshot.val();
       allReyslar = [];
@@ -229,7 +227,6 @@
       document.getElementById('reyslarContainer').innerHTML = '<div class="text-center py-5 text-muted">Hozircha reyslar mavjud emas.</div>';
     });
 
-    // Telefon raqamni masked (yashirilgan) qilish funksiyasi
     function maskPhoneNumber(phone) {
       if (!phone) return 'Yashirilgan';
       if (phone.length >= 9) {
@@ -255,8 +252,6 @@
         const isFull = item.boShJoy <= 0;
         const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.qayerdan + ' ' + (item.aniqManzil || ''))}`;
 
-        // Haydovchi ma'lumotlarini maxfiy tutish mantig'i:
-        // Agar foydalanuvchi kirgan bo'lsa va shu reysning o'zi bo'lsa to'liq ko'rinadi, bo'lmasa yashiriladi.
         const showFullContact = currentUser && (currentUser.uid === item.driverUid);
         const displayPhone = showFullContact ? item.userPhone : maskPhoneNumber(item.userPhone);
         const displayDriverName = showFullContact ? (item.driverName || 'Haydovchi') : 'Haydovchi (Maxfiy)';
