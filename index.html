@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RoadSales — Yo'lovchi va Haydovchilar Platformasi</title>
   
-  <!-- PWA & Mobile Meta Tags -->
+  <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d6efd">
-  <meta name="description" content="Shaharlararo hamyonbop va qulay reyslar platformasi">
 
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -21,196 +20,95 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
-    :root {
-      --primary-color: #0d6efd;
-      --hover-color: #0b5ed7;
-      --bg-light: #f4f6f9;
-    }
-
-    body {
-      background-color: var(--bg-light);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .main-wrapper {
-      flex: 1;
-    }
-
-    .hero-section {
-      background: linear-gradient(135deg, var(--primary-color), var(--hover-color));
-      color: white;
-      padding: 3.5rem 1rem;
-      border-radius: 0 0 24px 24px;
-      box-shadow: 0 4px 15px rgba(13, 110, 253, 0.2);
-    }
-
-    .search-box {
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-      padding: 1.25rem;
-    }
-
-    .card-reys {
-      border: none;
-      border-radius: 14px;
-      transition: all 0.25s ease;
-      background: #ffffff;
-    }
-
-    .card-reys:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
-    }
-
-    .badge-status {
-      font-size: 0.8rem;
-      padding: 0.45em 0.85em;
-      border-radius: 8px;
-    }
-
-    .profile-img {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid rgba(255, 255, 255, 0.8);
-    }
-
-    .info-label {
-      font-size: 0.875rem;
-      color: #6c757d;
-    }
-
-    .spinner-custom {
-      width: 3rem;
-      height: 3rem;
-    }
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .hero-section { background: linear-gradient(135deg, #0d6efd, #0b5ed7); color: white; padding: 3rem 1rem; border-radius: 0 0 20px 20px; }
+    .card { border: none; border-radius: 12px; transition: transform 0.2s; }
+    .card:hover { transform: translateY(-3px); }
+    .badge-status { font-size: 0.85rem; padding: 0.4em 0.8em; }
+    .profile-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
   </style>
 </head>
 <body>
 
-  <div class="main-wrapper">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
-      <div class="container">
-        <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
-          <i class="fa-solid fa-car-side me-2 fs-4"></i>
-          <span>RoadSales</span>
-        </a>
-        
-        <div class="d-flex align-items-center gap-3">
-          <div id="userInfo" class="d-none d-flex align-items-center gap-2 text-white">
-            <img id="userAvatar" class="profile-img" src="" alt="User Avatar">
-            <span id="userName" class="fw-semibold d-none d-sm-inline"></span>
-          </div>
-          <button id="authBtn" class="btn btn-light btn-sm fw-bold px-3 shadow-sm" onclick="handleAuthAction()">
-            Kirish
-          </button>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#"><i class="fa-solid fa-car-side me-2"></i>RoadSales</a>
+      <div class="d-flex align-items-center gap-3">
+        <div id="userInfo" class="d-none d-flex align-items-center gap-2 text-white">
+          <img id="userAvatar" class="profile-img" src="" alt="User">
+          <span id="userName" class="fw-semibold"></span>
         </div>
-      </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <div class="hero-section mb-4 text-center">
-      <div class="container">
-        <h1 class="fw-bold mb-2">Hamyonbop va qulay yo'llar</h1>
-        <p class="lead mb-4 opacity-90">O'zingizga mos reysni toping yoki daqiqa ichida e'lon bering!</p>
-        
-        <!-- Search Filter Box -->
-        <div class="search-box row g-2 justify-content-center text-dark mx-auto" style="max-width: 850px;">
-          <div class="col-md-4">
-            <label class="form-label d-none d-md-block text-start small fw-bold text-muted">Qayerdan</label>
-            <select id="filterQayerdan" class="form-select border-0 bg-light py-2">
-              <option value="">Qayerdan (Barchasi)</option>
-              <option value="Toshkent">Toshkent</option>
-              <option value="Samarqand">Samarqand</option>
-              <option value="Buxoro">Buxoro</option>
-              <option value="Andijon">Andijon</option>
-              <option value="Farg'ona">Farg'ona</option>
-              <option value="Namangan">Namangan</option>
-              <option value="Qarshi">Qarshi</option>
-              <option value="Termiz">Termiz</option>
-              <option value="Nukus">Nukus</option>
-              <option value="Urganch">Urganch</option>
-              <option value="Navoiy">Navoiy</option>
-              <option value="Jizzax">Jizzax</option>
-              <option value="Guliston">Guliston</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label d-none d-md-block text-start small fw-bold text-muted">Qayerga</label>
-            <select id="filterQayerga" class="form-select border-0 bg-light py-2">
-              <option value="">Qayerga (Barchasi)</option>
-              <option value="Toshkent">Toshkent</option>
-              <option value="Samarqand">Samarqand</option>
-              <option value="Buxoro">Buxoro</option>
-              <option value="Andijon">Andijon</option>
-              <option value="Farg'ona">Farg'ona</option>
-              <option value="Namangan">Namangan</option>
-              <option value="Qarshi">Qarshi</option>
-              <option value="Termiz">Termiz</option>
-              <option value="Nukus">Nukus</option>
-              <option value="Urganch">Urganch</option>
-              <option value="Navoiy">Navoiy</option>
-              <option value="Jizzax">Jizzax</option>
-              <option value="Guliston">Guliston</option>
-            </select>
-          </div>
-          <div class="col-md-4 d-flex align-items-end">
-            <button class="btn btn-primary w-100 fw-bold py-2" onclick="filterReyslar()">
-              <i class="fa-solid fa-magnifying-glass me-1"></i> Qidirish
-            </button>
-          </div>
-        </div>
+        <button id="authBtn" class="btn btn-light btn-sm fw-bold" onclick="handleAuthAction()">Kirish</button>
       </div>
     </div>
+  </nav>
 
-    <!-- Main Content -->
-    <div class="container mb-5">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-        <div>
-          <h4 class="fw-bold m-0 text-dark"><i class="fa-solid fa-route me-2 text-primary"></i>Mavjud Reyslar</h4>
-          <p class="text-muted small m-0">Barcha faol va rejalashtirilgan qatnovlar ro'yxati</p>
+  <!-- Hero & Filter Section -->
+  <div class="hero-section mb-4 text-center">
+    <div class="container">
+      <h2 class="fw-bold">Hamyonbop va qulay yo'llar</h2>
+      <p class="mb-4">O'zingizga mos reysni toping yoki o'z reysingizni e'lon qiling!</p>
+      
+      <div class="row g-2 justify-content-center bg-white p-3 rounded-4 shadow text-dark mx-auto" style="max-width: 800px;">
+        <div class="col-md-4">
+          <select id="filterQayerdan" class="form-select border-0 bg-light">
+            <option value="">Qayerdan (Barchasi)</option>
+            <option value="Toshkent">Toshkent</option>
+            <option value="Samarqand">Samarqand</option>
+            <option value="Buxoro">Buxoro</option>
+            <option value="Andijon">Andijon</option>
+            <option value="Farg'ona">Farg'ona</option>
+            <option value="Namangan">Namangan</option>
+          </select>
         </div>
-        <button class="btn btn-success fw-bold shadow-sm px-3" onclick="openCreateModal()">
-          <i class="fa-solid fa-circle-plus me-1"></i> Reys E'lon Qilish
-        </button>
-      </div>
-
-      <!-- Dynamic Reys List -->
-      <div id="reyslarContainer" class="row g-4">
-        <div class="text-center py-5">
-          <div class="spinner-border text-primary spinner-custom" role="status"></div>
-          <p class="mt-3 text-muted fw-semibold">Reyslar ma'lumotlar bazasidan yuklanmoqda...</p>
+        <div class="col-md-4">
+          <select id="filterQayerga" class="form-select border-0 bg-light">
+            <option value="">Qayerga (Barchasi)</option>
+            <option value="Toshkent">Toshkent</option>
+            <option value="Samarqand">Samarqand</option>
+            <option value="Buxoro">Buxoro</option>
+            <option value="Andijon">Andijon</option>
+            <option value="Farg'ona">Farg'ona</option>
+            <option value="Namangan">Namangan</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary w-100 fw-bold" onclick="filterReyslar()"><i class="fa-solid fa-magnifying-glass me-1"></i> Qidirish</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="bg-white border-top py-3 text-center text-muted small">
-    <div class="container">
-      <p class="mb-0">&copy; 2026 RoadSales Platformasi. Barcha huquqlar himoyalangan.</p>
+  <!-- Main Content Area -->
+  <div class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="fw-bold m-0"><i class="fa-solid fa-list-check me-2 text-primary"></i>Mavjud Reyslar</h4>
+      <button class="btn btn-success fw-bold shadow-sm" onclick="openCreateModal()"><i class="fa-solid fa-plus me-1"></i> Reys E'lon Qilish</button>
     </div>
-  </footer>
+
+    <!-- Reyslar kartochkalari konteyneri -->
+    <div id="reyslarContainer" class="row g-4">
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Reyslar yuklanmoqda...</p>
+      </div>
+    </div>
+  </div>
 
   <!-- Reys Yaratish Modali -->
-  <div class="modal fade" id="createReysModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow-lg">
+  <div class="modal fade" id="createReysModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
         <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title fw-bold"><i class="fa-solid fa-car me-2"></i>Yangi Reys Yaratish</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title"><i class="fa-solid fa-car me-2"></i>Yangi Reys Yaratish</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <form id="createReysForm" onsubmit="saveReys(event)">
-          <div class="modal-body p-4">
+          <div class="modal-body">
             <div class="row g-3">
               <div class="col-6">
-                <label class="form-label fw-semibold">Qayerdan</label>
+                <label class="form-label font-weight-bold">Qayerdan</label>
                 <select id="qayerdan" class="form-select" required>
                   <option value="">Tanlang...</option>
                   <option value="Toshkent">Toshkent</option>
@@ -219,17 +117,10 @@
                   <option value="Andijon">Andijon</option>
                   <option value="Farg'ona">Farg'ona</option>
                   <option value="Namangan">Namangan</option>
-                  <option value="Qarshi">Qarshi</option>
-                  <option value="Termiz">Termiz</option>
-                  <option value="Nukus">Nukus</option>
-                  <option value="Urganch">Urganch</option>
-                  <option value="Navoiy">Navoiy</option>
-                  <option value="Jizzax">Jizzax</option>
-                  <option value="Guliston">Guliston</option>
                 </select>
               </div>
               <div class="col-6">
-                <label class="form-label fw-semibold">Qayerga</label>
+                <label class="form-label font-weight-bold">Qayerga</label>
                 <select id="qayerga" class="form-select" required>
                   <option value="">Tanlang...</option>
                   <option value="Toshkent">Toshkent</option>
@@ -238,68 +129,52 @@
                   <option value="Andijon">Andijon</option>
                   <option value="Farg'ona">Farg'ona</option>
                   <option value="Namangan">Namangan</option>
-                  <option value="Qarshi">Qarshi</option>
-                  <option value="Termiz">Termiz</option>
-                  <option value="Nukus">Nukus</option>
-                  <option value="Urganch">Urganch</option>
-                  <option value="Navoiy">Navoiy</option>
-                  <option value="Jizzax">Jizzax</option>
-                  <option value="Guliston">Guliston</option>
                 </select>
               </div>
               <div class="col-12">
-                <label class="form-label fw-semibold">Aniq Manzil / Mo'ljal</label>
-                <input type="text" id="aniqManzil" class="form-control" placeholder="Masalan: Chilonzor Metro yoki Vokzal atrofi" required>
+                <label class="form-label">Aniq Manzil / Mo'ljal</label>
+                <input type="text" id="aniqManzil" class="form-control" placeholder="Masalan: Chilonzor Metro yoki Shimoliy Vokzal" required>
               </div>
               <div class="col-6">
-                <label class="form-label fw-semibold">Jo'nash Vaqti</label>
+                <label class="form-label">Jo'nash Vaqti</label>
                 <input type="datetime-local" id="vaqt" class="form-control" required>
               </div>
               <div class="col-6">
-                <label class="form-label fw-semibold">Bo'sh Joy Soni</label>
+                <label class="form-label">Bo'sh Joy Soni</label>
                 <input type="number" id="boShJoy" class="form-control" min="1" max="8" value="4" required>
               </div>
               <div class="col-6">
-                <label class="form-label fw-semibold">Narx (Bir kishi uchun)</label>
-                <div class="input-group">
-                  <input type="number" id="narx" class="form-control" placeholder="50000" step="1000" required>
-                  <span class="input-group-text small">so'm</span>
-                </div>
+                <label class="form-label">Narx (Bir o'rin uchun SO'M)</label>
+                <input type="number" id="narx" class="form-control" placeholder="50000" step="1000" required>
               </div>
               <div class="col-6">
-                <label class="form-label fw-semibold">Aloqa Telefon</label>
-                <input type="tel" id="userPhone" class="form-control" placeholder="+998901234567" pattern="^\+998[0-9]{9}$" title="Format: +998901234567" required>
+                <label class="form-label">Aloqa Telefon</label>
+                <input type="tel" id="userPhone" class="form-control" placeholder="+998901234567" required>
               </div>
             </div>
           </div>
-          <div class="modal-footer bg-light px-4 py-3">
-            <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Bekor qilish</button>
-            <button type="submit" id="saveReysBtn" class="btn btn-success px-4 fw-bold">
-              <i class="fa-solid fa-check me-1"></i> E'lon qilish
-            </button>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+            <button type="submit" class="btn btn-success"><i class="fa-solid fa-check me-1"></i> E'lon qilish</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
 
   <script>
-    // 1. Firebase Konfiguratsiya Obyekti
-    // O'ZINGIZNING FIREBASE KONSOLINGIZDAN OLINGAN KALITLARNI SHU YERGA QO'YING:
+    // Firebase Konfiguratsiyasi (Loyiha parametrlaringiz moslashtirildi)
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      databaseURL: "YOUR_DATABASE_URL",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      authDomain: "roadsales-d76af.firebaseapp.com",
+      databaseURL: "https://roadsales-d76af-default-rtdb.firebaseio.com",
+      projectId: "roadsales-d76af",
+      storageBucket: "roadsales-d76af.appspot.com",
+      messagingSenderId: "847332122916",
+      appId: "1:847332122916:web:ZTYzZDgwYzYtZGRiNi00NGJkLTI3YWExOTYwNTI3NWJj"
     };
 
-    // Firebase Init
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
@@ -309,7 +184,7 @@
     let currentUser = null;
     let allReyslar = [];
 
-    // 2. Auth Holatini Kuzatish
+    // Auth Holatini Kuzatish
     auth.onAuthStateChanged(user => {
       currentUser = user;
       const authBtn = document.getElementById('authBtn');
@@ -320,7 +195,7 @@
         authBtn.classList.replace("btn-light", "btn-outline-light");
         userInfo.classList.remove('d-none');
         document.getElementById('userName').innerText = user.displayName || 'Foydalanuvchi';
-        document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/40?text=User';
+        document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/40';
       } else {
         authBtn.innerText = "Kirish";
         authBtn.classList.replace("btn-outline-light", "btn-light");
@@ -328,28 +203,19 @@
       }
     });
 
-    // 3. Google bilan Tizimga Kirish / Chiqish
+    // Google Kirish / Chiqish
     function handleAuthAction() {
       if (currentUser) {
-        auth.signOut().then(() => {
-          alert("Tizimdan chiqdingiz.");
-        }).catch(err => {
-          console.error("Signout error:", err);
-        });
+        auth.signOut();
       } else {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider).catch(error => {
-          console.error("Auth Error:", error);
-          if (error.code === 'auth/unauthorized-domain') {
-            alert("Xatolik: Ulanayotgan domeningiz Firebase Authorized Domains ro'yxatiga qo'shilmagan!");
-          } else {
-            alert("Tizimga kirishda xatolik yuz berdi: " + error.message);
-          }
+          alert("Kirishda xatolik yuz berdi: " + error.message);
         });
       }
     }
 
-    // 4. Realtime Database'dan Reyslarni Olish
+    // Reyslarni Yuklab Olish
     db.ref('reyslar').on('value', snapshot => {
       const data = snapshot.val();
       allReyslar = [];
@@ -360,80 +226,45 @@
       }
       renderReyslar(allReyslar);
     }, error => {
-      console.error("Database Fetch Error:", error);
-      const container = document.getElementById('reyslarContainer');
-      container.innerHTML = `
-        <div class="col-12 text-center py-5">
-          <div class="alert alert-danger d-inline-block px-4">
-            <i class="fa-solid fa-triangle-exclamation me-2"></i>
-            Ma'lumotlarni yuklashda xatolik yuz berdi. Firebase kalitlari va tarmoq ulanishini tekshiring.
-          </div>
-        </div>`;
+      console.error("Baza yuklanishida xatolik:", error);
+      document.getElementById('reyslarContainer').innerHTML = '<div class="text-center py-5 text-muted">Hozircha reyslar mavjud emas.</div>';
     });
 
-    // 5. Cardlarni Ekran Interfeysiga Chiqarish
     function renderReyslar(list) {
       const container = document.getElementById('reyslarContainer');
       container.innerHTML = '';
 
       if (list.length === 0) {
-        container.innerHTML = `
-          <div class="col-12 text-center py-5">
-            <div class="text-muted">
-              <i class="fa-regular fa-folder-open fs-1 d-block mb-2"></i>
-              Hozircha hech qanday reys topilmadi.
-            </div>
-          </div>`;
+        container.innerHTML = '<div class="text-center py-5 text-muted">Hozircha hech qanday reys topilmadi.</div>';
         return;
       }
 
       const now = new Date().getTime();
 
-      // Eng yangi reyslarni yuqoriga chiqarish
-      const sortedList = [...list].reverse();
-
-      sortedList.forEach(item => {
+      list.reverse().forEach(item => {
         const itemTime = new Date(item.vaqt).getTime();
         const isExpired = itemTime < now;
         const isFull = item.boShJoy <= 0;
-
-        // Aniq Google Maps Qidiruv Havolasi
-        const queryText = `${item.aniqManzil ? item.aniqManzil + ', ' : ''}${item.qayerdan}, O'zbekiston`;
-        const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryText)}`;
+        const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.qayerdan + ' ' + (item.aniqManzil || ''))}`;
 
         const cardHtml = `
           <div class="col-md-6 col-lg-4">
-            <div class="card card-reys h-100 shadow-sm border-0 position-relative">
-              <div class="card-body d-flex flex-column p-4">
-                
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                  <h5 class="fw-bold text-primary mb-0">${item.qayerdan} &rarr; ${item.qayerga}</h5>
+            <div class="card h-100 shadow-sm border-0 position-relative">
+              <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <h5 class="fw-bold text-primary m-0">${item.qayerdan} &rarr; ${item.qayerga}</h5>
                   <span class="badge ${isExpired ? 'bg-secondary' : isFull ? 'bg-danger' : 'bg-success'} badge-status">
                     ${isExpired ? 'Eskirgan' : isFull ? 'Joy yo\'q' : item.boShJoy + ' ta joy bor'}
                   </span>
                 </div>
                 
-                <div class="mb-3">
-                  <div class="info-label mb-1">
-                    <i class="fa-solid fa-location-dot text-danger me-2"></i>
-                    <span>${item.aniqManzil || 'Aniq mo\'ljal ko\'rsatilmagan'}</span>
-                  </div>
-                  <div class="info-label mb-1">
-                    <i class="fa-regular fa-clock text-primary me-2"></i>
-                    <span>${new Date(item.vaqt).toLocaleString('uz-UZ', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                  <div class="info-label mb-1">
-                    <i class="fa-solid fa-tag text-warning me-2"></i>
-                    <strong class="text-dark">${Number(item.narx).toLocaleString()} so'm</strong> / kishi
-                  </div>
-                  <div class="info-label">
-                    <i class="fa-solid fa-phone text-success me-2"></i>
-                    <a href="tel:${item.userPhone}" class="text-decoration-none text-dark fw-semibold">${item.userPhone}</a>
-                  </div>
-                </div>
-
+                <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot text-danger me-1"></i> ${item.aniqManzil || 'Ko\'rsatilmagan'}</p>
+                <p class="small mb-1"><i class="fa-regular fa-clock me-1"></i> <strong>Vaqt:</strong> ${new Date(item.vaqt).toLocaleString('uz-UZ')}</p>
+                <p class="small mb-1"><i class="fa-solid fa-tag me-1 text-warning"></i> <strong>Narx:</strong> ${Number(item.narx).toLocaleString()} so'm</p>
+                <p class="small mb-3"><i class="fa-solid fa-phone me-1 text-success"></i> <strong>Tel:</strong> ${item.userPhone}</p>
+                
                 <div class="mt-auto pt-3 border-top d-flex gap-2">
-                  <a href="${mapSearchUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-danger btn-sm flex-fill">
+                  <a href="${mapSearchUrl}" target="_blank" class="btn btn-outline-danger btn-sm flex-fill">
                     <i class="fa-solid fa-map-location-dot me-1"></i> Xarita
                   </a>
                   <button 
@@ -443,7 +274,6 @@
                     <i class="fa-solid fa-ticket me-1"></i> Bron qilish
                   </button>
                 </div>
-
               </div>
             </div>
           </div>
@@ -452,7 +282,6 @@
       });
     }
 
-    // 6. Qidiruv / Filtr Mantiqiy Qismi
     function filterReyslar() {
       const qayerdan = document.getElementById('filterQayerdan').value;
       const qayerga = document.getElementById('filterQayerga').value;
@@ -466,10 +295,9 @@
       renderReyslar(filtered);
     }
 
-    // 7. Modal Oynani Ochish
     function openCreateModal() {
       if (!currentUser) {
-        alert("Reys e'lon qilish uchun avval Google akkauntingiz orqali tizimga kiring!");
+        alert("Reys e'lon qilish uchun avval tizimga kiring!");
         handleAuthAction();
         return;
       }
@@ -477,18 +305,13 @@
       modal.show();
     }
 
-    // 8. Reys Saqlash Funksiyasi
     function saveReys(event) {
       event.preventDefault();
       if (!currentUser) return;
 
-      const submitBtn = document.getElementById('saveReysBtn');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Saqlanmoqda...`;
-
       const newReys = {
         driverUid: currentUser.uid,
-        driverName: currentUser.displayName || 'Haydovchi',
+        driverName: currentUser.displayName,
         qayerdan: document.getElementById('qayerdan').value,
         qayerga: document.getElementById('qayerga').value,
         aniqManzil: document.getElementById('aniqManzil').value,
@@ -506,48 +329,29 @@
         document.getElementById('createReysForm').reset();
         alert("Reys muvaffaqiyatli e'lon qilindi!");
       }).catch(err => {
-        alert("E'lon qilishda xatolik yuz berdi: " + err.message);
-      }).finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<i class="fa-solid fa-check me-1"></i> E'lon qilish`;
+        alert("Xatolik yuz berdi: " + err.message);
       });
     }
 
-    // 9. Joy Bron Qilish (Transaction bilan poyga holatisiz safe)
     function bronQilish(reysId) {
       if (!currentUser) {
-        alert("Bron qilish uchun avval tizimga kirishingiz kerak!");
+        alert("Bron qilish uchun tizimga kirishingiz kerak!");
         handleAuthAction();
         return;
       }
 
       const reysRef = db.ref(`reyslar/${reysId}`);
       reysRef.transaction(reys => {
-        if (reys) {
-          if (reys.boShJoy > 0) {
-            reys.boShJoy--;
-          } else {
-            return; // Transactionni to'xtatish
-          }
+        if (reys && reys.boShJoy > 0) {
+          reys.boShJoy--;
         }
         return reys;
       }, (error, committed) => {
-        if (error) {
-          alert("Xatolik: Bron amalga oshmadi.");
-        } else if (!committed) {
-          alert("Afsuski, bo'sh joylar qolmagan!");
+        if (error || !committed) {
+          alert("Bron qilish iloji bo'lmadi.");
         } else {
-          alert("Joy muvaffaqiyatli bron qilindi! Haydovchi telefon raqamiga qo'ng'iroq qilib bog'lanishingiz mumkin.");
+          alert("Joy muvaffaqiyatli bron qilindi!");
         }
-      });
-    }
-
-    // 10. Service Worker (PWA) Ulanishi
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW registratsiyasi muvaffaqiyatli:', reg.scope))
-          .catch(err => console.log('SW registratsiya xatosi:', err));
       });
     }
   </script>
