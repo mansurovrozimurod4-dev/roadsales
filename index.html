@@ -3,84 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roadsales — Avtobus va Taksi Bazari</title>
+    <title>Roadsales — Taksi va Safar Hamrohi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        body { background-color: #0066ff; color: #fff; font-family: system-ui, -apple-system, sans-serif; }
-        .main-card { background: #fff; color: #333; border-radius: 16px; padding: 24px; }
-        .badge-custom { background-color: #e6f0ff; color: #0066ff; font-weight: 600; }
-        .bron-box { background-color: #f8f9fa; border-radius: 8px; padding: 10px; margin-top: 10px; border-left: 4px solid #0066ff; }
-        .btn-google { background-color: #ffffff; color: #757575; font-weight: 600; border: 1px solid #ddd; }
-        .btn-google:hover { background-color: #f1f1f1; color: #333; }
+        body { background-color: #0d6efd; color: #fff; font-family: system-ui, -apple-system, sans-serif; }
+        .hero-title { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 25px; }
+        .search-box { background: #ffc107; padding: 15px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .search-input { border: none; padding: 12px 15px; border-radius: 10px; }
+        .search-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(13,110,253,0.3); }
+        .main-card { background: #fff; color: #333; border-radius: 20px; padding: 25px; margin-top: 25px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+        .badge-custom { background-color: #e7f1ff; color: #0d6efd; font-weight: 600; padding: 6px 12px; border-radius: 8px; }
+        .btn-google { background-color: #ffffff; color: #333; font-weight: 600; border: none; padding: 8px 16px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .btn-google:hover { background-color: #f8f9fa; }
+        .reys-card { border: 1px solid #e9ecef; border-radius: 14px; padding: 18px; margin-bottom: 15px; transition: 0.2s; }
+        .reys-card:hover { border-color: #0d6efd; box-shadow: 0 4px 12px rgba(13,110,253,0.1); }
     </style>
 </head>
 <body>
 
     <div class="container py-3 d-flex justify-content-between align-items-center">
-        <h3 class="fw-bold m-0 text-white">roadsales</h3>
+        <h2 class="fw-bold m-0 text-white"><i class="bi bi-car-front-fill me-2"></i>roadsales</h2>
         <div id="authContainer" class="d-flex gap-2 align-items-center"></div>
     </div>
 
-    <div class="container my-4 text-center">
-        <h1 class="fw-bold mb-4">Bu yerdan arzon safar chiptalarini sotib oling</h1>
+    <div class="container my-3">
+        <div class="hero-title">Tez va qulay safar hamrohi toping</div>
         
-        <div class="main-card text-start shadow-lg">
-            <h4 class="fw-bold mb-4 text-dark">Mavjud reyslar</h4>
+        <!-- Aviasales uslubidagi Qidiruv paneli -->
+        <div class="search-box text-dark">
+            <div class="row g-2">
+                <div class="col-md-3 col-6">
+                    <input type="text" id="searchFrom" class="form-control search-input" placeholder="Qayerdan (masalan: Toshkent)" oninput="filterReyslar()">
+                </div>
+                <div class="col-md-3 col-6">
+                    <input type="text" id="searchTo" class="form-control search-input" placeholder="Qayerga (masalan: Samarqand)" oninput="filterReyslar()">
+                </div>
+                <div class="col-md-3 col-12">
+                    <input type="date" id="searchDate" class="form-control search-input" onchange="filterReyslar()">
+                </div>
+                <div class="col-md-3 col-12">
+                    <button class="btn btn-dark w-100 h-100 fw-bold rounded-3" onclick="resetFilter()"><i class="bi bi-arrow-clockwise me-1"></i> Filtrni tozalash</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold text-dark m-0">Mavjud reyslar</h4>
+                <span id="reysCount" class="badge bg-primary rounded-pill fs-6">0 ta</span>
+            </div>
             <div id="reyslarContainer">
                 <p class="text-muted text-center py-4">Reyslar yuklanmoqda...</p>
             </div>
         </div>
     </div>
 
+    <!-- Ism-Familiya Modal (Google bilan birinchi marta kirganda) -->
+    <div class="modal fade text-dark" id="profileModal" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Ma'lumotlaringizni kiriting</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="profileForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ismingiz va Familiyangiz</label>
+                            <input type="text" id="userFullName" class="form-control" placeholder="Ali Valiyev" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Telefon raqamingiz</label>
+                            <input type="text" id="userPhone" class="form-control" placeholder="+998 90 123 45 67" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Saqlash va Davom etish</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reys qo'shish Modal -->
     <div class="modal fade text-dark" id="addModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Yangi reys qo'shish (Shaxsiy kabinet)</h5>
+                    <h5 class="modal-title fw-bold">Yangi reys e'lon qilish</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="reysForm">
                         <div class="mb-2">
                             <label class="form-label small fw-bold">Qayerdan</label>
-                            <input type="text" id="qayerdan" class="form-control" placeholder="Masalan: Jizzax" required>
+                            <input type="text" id="qayerdan" class="form-control" placeholder="Masalan: Toshkent" required>
                         </div>
                         <div class="mb-2">
                             <label class="form-label small fw-bold">Qayerga</label>
-                            <input type="text" id="qayerga" class="form-control" placeholder="Masalan: Guliston" required>
+                            <input type="text" id="qayerga" class="form-control" placeholder="Masalan: Samarqand" required>
                         </div>
                         <div class="row">
                             <div class="col-6 mb-2">
-                                <label class="form-label small fw-bold">Jo'nash vaqti</label>
+                                <label class="form-label small fw-bold">Jo'nash kuni va vaqti</label>
                                 <input type="datetime-local" id="vaqt" class="form-control" required>
                             </div>
                             <div class="col-6 mb-2">
-                                <label class="form-label small fw-bold">Bo'sh joylar</label>
+                                <label class="form-label small fw-bold">Bo'sh joylar soni</label>
                                 <input type="number" id="joy" class="form-control" placeholder="4" min="1" required>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-6 mb-2">
-                                <label class="form-label small fw-bold">Telefon</label>
-                                <input type="text" id="tel" class="form-control" placeholder="918888888" required>
+                                <label class="form-label small fw-bold">Har bir o'rin narxi (UZS)</label>
+                                <input type="number" id="narx" class="form-control" placeholder="50000" required>
                             </div>
                             <div class="col-6 mb-2">
-                                <label class="form-label small fw-bold">Narxi (UZS)</label>
-                                <input type="number" id="narx" class="form-control" placeholder="25000" required>
+                                <label class="form-label small fw-bold">Mashina rusumi</label>
+                                <input type="text" id="mashina" class="form-control" placeholder="Gentra / Cobalt" required>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Mashina rusumi</label>
-                            <input type="text" id="mashina" class="form-control" placeholder="Nexia 1" required>
-                        </div>
-                        
                         <div class="d-flex justify-content-end gap-2 mt-4">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
                             <button type="submit" class="btn btn-warning text-white fw-bold">E'lonni joylash</button>
                         </div>
                     </form>
@@ -89,27 +136,28 @@
         </div>
     </div>
 
+    <!-- Bron qilish Modal -->
     <div class="modal fade text-dark" id="bronModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Reysni bron qilish</h5>
+                    <h5 class="modal-title fw-bold">Joyni band qilish</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="bronForm">
                         <input type="hidden" id="bronReysId">
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Ismingiz</label>
-                            <input type="text" id="bronIsm" class="form-control" placeholder="Ismingizni kiriting" required>
+                            <label class="form-label small fw-bold">Ism va Familiyangiz</label>
+                            <input type="text" id="bronIsm" class="form-control" placeholder="Ism Familiya" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Telefon raqamingiz</label>
-                            <input type="text" id="bronTel" class="form-control" placeholder="901234567" required>
+                            <input type="text" id="bronTel" class="form-control" placeholder="+998 90 123 45 67" required>
                         </div>
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
-                            <button type="submit" class="btn btn-primary fw-bold">Tasdiqlash</button>
+                            <button type="submit" class="btn btn-primary fw-bold">Joyni band qilish</button>
                         </div>
                     </form>
                 </div>
@@ -137,56 +185,87 @@
         const auth = firebase.auth();
 
         let currentUser = null;
-
-        // Redirect natijasini olish
-        auth.getRedirectResult().catch((error) => {
-            console.error("Redirect Auth Error:", error);
-        });
+        let userProfileData = null;
+        let allReyslar = null;
 
         auth.onAuthStateChanged((user) => {
             currentUser = user;
             const container = document.getElementById('authContainer');
             
             if (user) {
-                container.innerHTML = `
-                    <button class="btn btn-warning fw-bold text-white px-3" data-bs-toggle="modal" data-bs-target="#addModal">+ Reys kiritish</button>
-                    <button onclick="logout()" class="btn btn-outline-light btn-sm">Chiqish (${user.displayName || user.email.split('@')[0]})</button>
-                `;
+                db.ref('users/' + user.uid).once('value').then(snapshot => {
+                    userProfileData = snapshot.val();
+                    if (!userProfileData || !userProfileData.fullName) {
+                        const profileModal = new bootstrap.Modal(document.getElementById('profileModal'));
+                        profileModal.show();
+                    } else {
+                        renderAuthHeader(userProfileData.fullName);
+                    }
+                });
             } else {
                 container.innerHTML = `
-                    <button onclick="loginWithGoogle()" class="btn btn-google d-flex align-items-center gap-2 shadow-sm">
+                    <button onclick="loginWithGoogle()" class="btn btn-google d-flex align-items-center gap-2">
                         <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.74-.06-1.28-.19-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l2.84 2.2c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.84-2.2c-.76.53-1.78.9-3.12.9-2.38 0-4.41-1.57-5.13-3.74L.97 13.04C2.45 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.87 10.78c-.19-.53-.3-1.1-.3-1.78s.11-1.25.3-1.78L.97 4.96C.35 6.18 0 7.55 0 9s.35 2.82.97 4.04l2.9-2.26z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.45 2.02.97 4.96l2.9 2.26C4.59 5.05 6.62 3.58 9 3.58z"/></svg>
                         Google orqali kirish
                     </button>
                 `;
+                renderReyslar();
             }
-            renderReyslar();
         });
 
-        // Redirect bilan avtorizatsiyadan o'tish (Telegram App uchun moslangan)
+        function renderAuthHeader(name) {
+            document.getElementById('authContainer').innerHTML = `
+                <button class="btn btn-warning fw-bold text-white px-3" data-bs-toggle="modal" data-bs-target="#addModal">+ Reys e'lon qilish</button>
+                <button onclick="logout()" class="btn btn-outline-light btn-sm"><i class="bi bi-person-circle me-1"></i> ${name}</button>
+            `;
+            renderReyslar();
+        }
+
         function loginWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithRedirect(provider);
+            auth.signInWithPopup(provider).catch(err => {
+                alert("Kirishda xatolik yuz berdi: " + err.message);
+            });
         }
 
         function logout() {
-            auth.signOut();
+            auth.signOut().then(() => location.reload());
         }
+
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('userFullName').value;
+            const phone = document.getElementById('userPhone').value;
+
+            if (currentUser) {
+                db.ref('users/' + currentUser.uid).set({
+                    fullName: fullName,
+                    phone: phone,
+                    email: currentUser.email
+                }).then(() => {
+                    userProfileData = { fullName, phone };
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
+                    modal.hide();
+                    renderAuthHeader(fullName);
+                });
+            }
+        });
 
         document.getElementById('reysForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            if (!currentUser) {
-                alert("E'lon qo'shish uchun Google orqali kiring!");
+            if (!currentUser || !userProfileData) {
+                alert("E'lon joylash uchun profil ma'lumotlarini to'ldiring!");
                 return;
             }
 
             const newReys = {
                 ownerUid: currentUser.uid,
-                qayerdan: document.getElementById('qayerdan').value,
-                qayerga: document.getElementById('qayerga').value,
+                ownerName: userProfileData.fullName,
+                qayerdan: document.getElementById('qayerdan').value.trim(),
+                qayerga: document.getElementById('qayerga').value.trim(),
                 vaqt: document.getElementById('vaqt').value.replace('T', ' '),
                 joy: parseInt(document.getElementById('joy').value),
-                tel: document.getElementById('tel').value,
+                tel: userProfileData.phone,
                 narx: Number(document.getElementById('narx').value).toLocaleString(),
                 mashina: document.getElementById('mashina').value,
                 mijozlar: {}
@@ -196,11 +275,15 @@
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
                 modal.hide();
                 document.getElementById('reysForm').reset();
-            }).catch(err => alert("Xatolik: " + err.message));
+            });
         });
 
         function openBronModal(key) {
             document.getElementById('bronReysId').value = key;
+            if (userProfileData) {
+                document.getElementById('bronIsm').value = userProfileData.fullName || '';
+                document.getElementById('bronTel').value = userProfileData.phone || '';
+            }
             const modal = new bootstrap.Modal(document.getElementById('bronModal'));
             modal.show();
         }
@@ -218,64 +301,79 @@
                     if (reys.joy > 0) {
                         reys.joy -= 1;
                         if (!reys.mijozlar) reys.mijozlar = {};
-                        const newMijozKey = db.ref().child('reyslar').push().key;
-                        reys.mijozlar[newMijozKey] = { ism: ism, tel: tel };
+                        const newKey = db.ref().child('reyslar').push().key;
+                        reys.mijozlar[newKey] = { ism: ism, tel: tel };
                     } else {
-                        alert("Kechirasiz, ushbu reysda bo'sh joy qolmagan!");
+                        alert("Kechirasiz, joy qolmagan!");
                         return;
                     }
                 }
                 return reys;
             }, (error, committed) => {
-                if (error) {
-                    alert("Bron qilishda xatolik: " + error.message);
-                } else if (committed) {
+                if (committed) {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('bronModal'));
                     modal.hide();
-                    document.getElementById('bronForm').reset();
-                    alert("Reys muvaffaqiyatli bron qilindi!");
+                    alert("Joy muvaffaqiyatli band qilindi!");
                 }
             });
         });
 
         function deleteReys(key) {
-            if (confirm("Ushbu e'lonni o'chirmoqchimisiz?")) {
+            if (confirm("E'lonni o'chirmoqchimisiz?")) {
                 db.ref('reyslar/' + key).remove();
             }
         }
 
-        let latestData = null;
         db.ref('reyslar').on('value', (snapshot) => {
-            latestData = snapshot.val();
-            
-            if (latestData) {
-                Object.keys(latestData).forEach(key => {
-                    if (!latestData[key].ownerUid) {
-                        db.ref('reyslar/' + key).remove();
-                    }
-                });
-            }
+            allReyslar = snapshot.val();
             renderReyslar();
         });
+
+        function filterReyslar() {
+            renderReyslar();
+        }
+
+        function resetFilter() {
+            document.getElementById('searchFrom').value = '';
+            document.getElementById('searchTo').value = '';
+            document.getElementById('searchDate').value = '';
+            renderReyslar();
+        }
 
         function renderReyslar() {
             const container = document.getElementById('reyslarContainer');
             container.innerHTML = '';
 
-            if (!latestData) {
+            if (!allReyslar) {
+                document.getElementById('reysCount').innerText = '0 ta';
                 container.innerHTML = '<p class="text-muted text-center py-4">Hozircha faol reyslar yo\'q.</p>';
                 return;
             }
 
-            const keys = Object.keys(latestData).filter(key => latestData[key].ownerUid);
+            const fromVal = document.getElementById('searchFrom').value.toLowerCase();
+            const toVal = document.getElementById('searchTo').value.toLowerCase();
+            const dateVal = document.getElementById('searchDate').value;
+
+            const keys = Object.keys(allReyslar).filter(key => {
+                const item = allReyslar[key];
+                if (!item.ownerUid) return false;
+
+                const matchFrom = item.qayerdan.toLowerCase().includes(fromVal);
+                const matchTo = item.qayerga.toLowerCase().includes(toVal);
+                const matchDate = dateVal ? item.vaqt.startsWith(dateVal) : true;
+
+                return matchFrom && matchTo && matchDate;
+            });
+
+            document.getElementById('reysCount').innerText = keys.length + ' ta';
 
             if (keys.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center py-4">Hozircha faol reyslar yo\'q.</p>';
+                container.innerHTML = '<p class="text-muted text-center py-4">Siz qidirgan yo\'nalishda reyslar topilmadi.</p>';
                 return;
             }
 
             keys.reverse().forEach((key) => {
-                const item = latestData[key];
+                const item = allReyslar[key];
                 const isOwner = currentUser && (item.ownerUid === currentUser.uid);
 
                 let mijozlarHTML = '';
@@ -285,40 +383,39 @@
                             mijozlarHTML += `<li class="small text-dark">👤 <b>${m.ism}</b> (📞 ${m.tel})</li>`;
                         });
                     } else {
-                        mijozlarHTML = '<span class="small text-muted">Hozircha bron qilgan mijozlar yo\'q</span>';
+                        mijozlarHTML = '<span class="small text-muted">Hozircha yo\'lovchilar yo\'q</span>';
                     }
                 }
 
                 const joyQolmagan = item.joy <= 0;
 
                 container.innerHTML += `
-                    <div class="border rounded-4 p-3 mb-3 position-relative">
+                    <div class="reys-card">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
-                                <span class="badge badge-custom me-1">🚘 ${item.mashina}</span>
-                                <span class="badge bg-success">YANGI REYS</span>
+                                <span class="badge-custom me-1"><i class="bi bi-car-front"></i> ${item.mashina}</span>
+                                <span class="small text-muted ms-2">Haydovchi: <b>${item.ownerName || 'Haydovchi'}</b></span>
                             </div>
                             <h4 class="fw-bold text-primary m-0">${item.narx} UZS</h4>
                         </div>
-                        <h4 class="fw-bold my-2">${item.qayerdan} ➔ ${item.qayerga}</h4>
-                        <div class="text-muted small">
-                            <div>📅 Vaqt: ${item.vaqt}</div>
-                            <div>💺 Bo'sh joylar: <strong class="${joyQolmagan ? 'text-danger' : 'text-success'}">${item.joy} ta</strong></div>
-                            <div>📞 Haydovchi tel: ${item.tel}</div>
+                        <h4 class="fw-bold my-2 text-dark">${item.qayerdan} <i class="bi bi-arrow-right text-primary"></i> ${item.qayerga}</h4>
+                        <div class="text-muted small d-flex flex-wrap gap-3 my-2">
+                            <div><i class="bi bi-calendar-event"></i> ${item.vaqt}</div>
+                            <div><i class="bi bi-person-seat"></i> Bo'sh joy: <strong class="${joyQolmagan ? 'text-danger' : 'text-success'}">${item.joy} ta</strong></div>
+                            <div><i class="bi bi-telephone"></i> ${item.tel}</div>
                         </div>
 
                         ${isOwner ? `
-                        <div class="bron-box border-top">
-                            <div class="fw-bold small text-primary mb-1">🔒 Shaxsiy kabinet (Faqat sizga ko'rinadi):</div>
-                            <div class="small fw-bold text-secondary">👥 Bron qilgan mijozlaringiz:</div>
+                        <div class="bg-light p-2 rounded-3 mt-2 border">
+                            <div class="fw-bold small text-primary mb-1"><i class="bi bi-shield-lock"></i> Sizning e'loningiz (Yo'lovchilar):</div>
                             <ul class="list-unstyled mb-0 ms-2">${mijozlarHTML}</ul>
                         </div>
                         ` : ''}
 
                         <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-                            ${isOwner ? `<button onclick="deleteReys('${key}')" class="btn btn-outline-danger btn-sm">E'lonni o'chirish</button>` : '<div></div>'}
+                            ${isOwner ? `<button onclick="deleteReys('${key}')" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> O'chirish</button>` : '<div></div>'}
                             <button onclick="openBronModal('${key}')" class="btn btn-primary px-4 fw-bold" ${joyQolmagan ? 'disabled' : ''}>
-                                ${joyQolmagan ? 'Joy yo\'q' : 'Bron qilish'}
+                                ${joyQolmagan ? 'Joy yo\'q' : 'Joyni band qilish'}
                             </button>
                         </div>
                     </div>
