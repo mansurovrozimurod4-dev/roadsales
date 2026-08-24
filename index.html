@@ -13,17 +13,16 @@
     
     <style>
         body { background-color: #0d6efd; color: #fff; font-family: system-ui, -apple-system, sans-serif; }
-        .hero-title { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 25px; }
+        .hero-title { font-size: 2rem; font-weight: 800; text-align: center; margin-bottom: 20px; }
         .search-box { background: #ffc107; padding: 15px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .search-input { border: none; padding: 12px 15px; border-radius: 10px; }
-        .search-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(13,110,253,0.3); }
-        .main-card { background: #fff; color: #333; border-radius: 20px; padding: 25px; margin-top: 25px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+        .main-card { background: #fff; color: #333; border-radius: 20px; padding: 20px; margin-top: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
         .badge-custom { background-color: #e7f1ff; color: #0d6efd; font-weight: 600; padding: 6px 12px; border-radius: 8px; }
         .btn-google { background-color: #ffffff; color: #333; font-weight: 600; border: none; padding: 8px 16px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
-        .btn-google:hover { background-color: #f8f9fa; }
-        .reys-card { border: 1px solid #e9ecef; border-radius: 14px; padding: 18px; margin-bottom: 15px; transition: 0.2s; }
+        .reys-card { border: 1px solid #e9ecef; border-radius: 14px; padding: 16px; margin-bottom: 15px; transition: 0.2s; }
         .reys-card:hover { border-color: #0d6efd; box-shadow: 0 4px 12px rgba(13,110,253,0.1); }
-        .privacy-badge { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 6px; font-size: 0.8rem; padding: 4px 8px; }
+        .privacy-badge { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 6px; font-size: 0.75rem; padding: 3px 6px; }
+        .expired-card { opacity: 0.6; background-color: #f8f9fa; }
     </style>
 </head>
 <body>
@@ -33,29 +32,28 @@
         <div id="authContainer" class="d-flex gap-2 align-items-center"></div>
     </div>
 
-    <div class="container my-3">
+    <div class="container my-2">
         <div class="hero-title">Tez va qulay safar hamrohi toping</div>
         
-        <!-- Aviasales uslubidagi Qidiruv paneli -->
         <div class="search-box text-dark">
             <div class="row g-2">
-                <div class="col-md-3 col-6">
+                <div class="col-12 col-md-3">
                     <input type="text" id="searchFrom" class="form-control search-input" placeholder="Qayerdan (masalan: Toshkent)" oninput="filterReyslar()">
                 </div>
-                <div class="col-md-3 col-6">
+                <div class="col-12 col-md-3">
                     <input type="text" id="searchTo" class="form-control search-input" placeholder="Qayerga (masalan: Samarqand)" oninput="filterReyslar()">
                 </div>
-                <div class="col-md-3 col-12">
+                <div class="col-6 col-md-3">
                     <input type="date" id="searchDate" class="form-control search-input" onchange="filterReyslar()">
                 </div>
-                <div class="col-md-3 col-12">
-                    <button class="btn btn-dark w-100 h-100 fw-bold rounded-3" onclick="resetFilter()"><i class="bi bi-arrow-clockwise me-1"></i> Filtrni tozalash</button>
+                <div class="col-6 col-md-3">
+                    <button class="btn btn-dark w-100 h-100 fw-bold rounded-3" onclick="resetFilter()"><i class="bi bi-arrow-clockwise"></i> Tozalash</button>
                 </div>
             </div>
         </div>
 
         <div class="main-card">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="fw-bold text-dark m-0">Mavjud reyslar</h4>
                 <span id="reysCount" class="badge bg-primary rounded-pill fs-6">0 ta</span>
             </div>
@@ -65,7 +63,7 @@
         </div>
     </div>
 
-    <!-- Ism-Familiya Modal -->
+    <!-- Profil Modal -->
     <div class="modal fade text-dark" id="profileModal" data-bs-backdrop="static" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -73,17 +71,16 @@
                     <h5 class="modal-title fw-bold"><i class="bi bi-shield-check text-primary me-2"></i>Profil ma'lumotlaringiz</h5>
                 </div>
                 <div class="modal-body">
-                    <p class="small text-muted mb-3">Xavfsizlik va maxfiylikni ta'minlash uchun ism-familiyangiz va telefoningizni kiriting.</p>
                     <form id="profileForm">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Ismingiz va Familiyangiz</label>
+                            <label class="form-label fw-bold">Ism va Familiya</label>
                             <input type="text" id="userFullName" class="form-control" placeholder="Ali Valiyev" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Telefon raqamingiz</label>
+                            <label class="form-label fw-bold">Telefon raqam</label>
                             <input type="text" id="userPhone" class="form-control" placeholder="+998 90 123 45 67" required>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 fw-bold">Saqlash va Davom etish</button>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Saqlash</button>
                     </form>
                 </div>
             </div>
@@ -114,8 +111,8 @@
                                 <input type="datetime-local" id="vaqt" class="form-control" required>
                             </div>
                             <div class="col-6 mb-2">
-                                <label class="form-label small fw-bold">Bo'sh joylar soni</label>
-                                <input type="number" id="joy" class="form-control" placeholder="4" min="1" required>
+                                <label class="form-label small fw-bold">Bo'sh joylar</label>
+                                <input type="number" id="joy" class="form-control" placeholder="4" min="1" max="8" required>
                             </div>
                         </div>
                         <div class="row">
@@ -128,9 +125,9 @@
                                 <input type="text" id="mashina" class="form-control" placeholder="Gentra / Cobalt" required>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-end gap-2 mt-4">
+                        <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
-                            <button type="submit" class="btn btn-warning text-white fw-bold">E'lonni joylash</button>
+                            <button type="submit" class="btn btn-warning text-white fw-bold">E'lon qilish</button>
                         </div>
                     </form>
                 </div>
@@ -147,20 +144,23 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="small text-muted mb-3"><i class="bi bi-lock-fill text-warning"></i> Telefon raqamingiz faqat haydovchiga ko'rinadi.</p>
                     <form id="bronForm">
                         <input type="hidden" id="bronReysId">
-                        <div class="mb-3">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Nechta joy band qilasiz?</label>
+                            <input type="number" id="bronJoySoni" class="form-control" value="1" min="1" required>
+                        </div>
+                        <div class="mb-2">
                             <label class="form-label small fw-bold">Ism va Familiyangiz</label>
-                            <input type="text" id="bronIsm" class="form-control" placeholder="Ism Familiya" required>
+                            <input type="text" id="bronIsm" class="form-control" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Telefon raqamingiz</label>
-                            <input type="text" id="bronTel" class="form-control" placeholder="+998 90 123 45 67" required>
+                            <input type="text" id="bronTel" class="form-control" required>
                         </div>
-                        <div class="d-flex justify-content-end gap-2 mt-4">
+                        <div class="d-flex justify-content-end gap-2">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
-                            <button type="submit" class="btn btn-primary fw-bold">Joyni band qilish</button>
+                            <button type="submit" class="btn btn-primary fw-bold">Band qilish</button>
                         </div>
                     </form>
                 </div>
@@ -181,9 +181,7 @@
             appId: "1:847332122916:web:cb559bc341b84805cf53b1"
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const auth = firebase.auth();
 
@@ -199,8 +197,7 @@
                 db.ref('users/' + user.uid).once('value').then(snapshot => {
                     userProfileData = snapshot.val();
                     if (!userProfileData || !userProfileData.fullName) {
-                        const profileModal = new bootstrap.Modal(document.getElementById('profileModal'));
-                        profileModal.show();
+                        new bootstrap.Modal(document.getElementById('profileModal')).show();
                     } else {
                         renderAuthHeader(userProfileData.fullName);
                     }
@@ -209,7 +206,7 @@
                 container.innerHTML = `
                     <button onclick="loginWithGoogle()" class="btn btn-google d-flex align-items-center gap-2">
                         <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.74-.06-1.28-.19-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l2.84 2.2c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.84-2.2c-.76.53-1.78.9-3.12.9-2.38 0-4.41-1.57-5.13-3.74L.97 13.04C2.45 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.87 10.78c-.19-.53-.3-1.1-.3-1.78s.11-1.25.3-1.78L.97 4.96C.35 6.18 0 7.55 0 9s.35 2.82.97 4.04l2.9-2.26z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.45 2.02.97 4.96l2.9 2.26C4.59 5.05 6.62 3.58 9 3.58z"/></svg>
-                        Google orqali kirish
+                        Kirish
                     </button>
                 `;
                 renderReyslar();
@@ -218,31 +215,22 @@
 
         function renderAuthHeader(name) {
             document.getElementById('authContainer').innerHTML = `
-                <button class="btn btn-warning fw-bold text-white px-3" data-bs-toggle="modal" data-bs-target="#addModal">+ Reys e'lon qilish</button>
-                <button onclick="logout()" class="btn btn-outline-light btn-sm"><i class="bi bi-person-circle me-1"></i> ${name}</button>
+                <button class="btn btn-warning fw-bold text-white px-3" data-bs-toggle="modal" data-bs-target="#addModal">+ Reys</button>
+                <button onclick="logout()" class="btn btn-outline-light btn-sm"><i class="bi bi-person-circle"></i> ${name}</button>
             `;
             renderReyslar();
         }
 
         function loginWithGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(err => {
-                alert("Kirishda xatolik yuz berdi: " + err.message);
-            });
+            auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert("Xatolik: " + err.message));
         }
 
-        function logout() {
-            auth.signOut().then(() => location.reload());
-        }
+        function logout() { auth.signOut().then(() => location.reload()); }
 
-        // Telefon raqamini yashirish funksiyasi (Maxfiylik uchun)
         function maskPhone(phone) {
             if (!phone) return 'Yashiringan';
             const clean = phone.replace(/\s+/g, '');
-            if (clean.length >= 9) {
-                return clean.substring(0, 4) + ' *** ** ' + clean.substring(clean.length - 2);
-            }
-            return '*** *** ***';
+            return clean.length >= 9 ? clean.substring(0, 4) + ' *** ** ' + clean.substring(clean.length - 2) : '*** *** ***';
         }
 
         document.getElementById('profileForm').addEventListener('submit', function(e) {
@@ -251,14 +239,9 @@
             const phone = document.getElementById('userPhone').value;
 
             if (currentUser) {
-                db.ref('users/' + currentUser.uid).set({
-                    fullName: fullName,
-                    phone: phone,
-                    email: currentUser.email
-                }).then(() => {
+                db.ref('users/' + currentUser.uid).set({ fullName, phone, email: currentUser.email }).then(() => {
                     userProfileData = { fullName, phone };
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
-                    modal.hide();
+                    bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
                     renderAuthHeader(fullName);
                 });
             }
@@ -266,10 +249,7 @@
 
         document.getElementById('reysForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            if (!currentUser || !userProfileData) {
-                alert("E'lon joylash uchun profil ma'lumotlarini to'ldiring!");
-                return;
-            }
+            if (!currentUser || !userProfileData) return alert("E'lon joylash uchun hisobga kiring!");
 
             const newReys = {
                 ownerUid: currentUser.uid,
@@ -281,60 +261,66 @@
                 tel: userProfileData.phone,
                 narx: Number(document.getElementById('narx').value).toLocaleString(),
                 mashina: document.getElementById('mashina').value,
-                mijozlar: {}
+                timestamp: new Date(document.getElementById('vaqt').value).getTime()
             };
 
             db.ref('reyslar').push(newReys).then(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
-                modal.hide();
+                bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
                 document.getElementById('reysForm').reset();
             });
         });
 
-        function openBronModal(key) {
+        // 1-Kamchilik tuzatildi: Faqat tizimga kirgan foydalanuvchi bron qila oladi
+        function openBronModal(key, maxJoy) {
+            if (!currentUser) {
+                alert("Joyni band qilish uchun avval Google orqali tizimga kiring!");
+                loginWithGoogle();
+                return;
+            }
+
             document.getElementById('bronReysId').value = key;
+            const joyInput = document.getElementById('bronJoySoni');
+            joyInput.max = maxJoy;
+            joyInput.value = 1;
+
             if (userProfileData) {
                 document.getElementById('bronIsm').value = userProfileData.fullName || '';
                 document.getElementById('bronTel').value = userProfileData.phone || '';
             }
-            const modal = new bootstrap.Modal(document.getElementById('bronModal'));
-            modal.show();
+            new bootstrap.Modal(document.getElementById('bronModal')).show();
         }
 
+        // 2-Kamchilik tuzatildi: Dinamik ko'p joylarni bir yo'la band qilish
         document.getElementById('bronForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const key = document.getElementById('bronReysId').value;
+            const bronJoy = parseInt(document.getElementById('bronJoySoni').value);
             const ism = document.getElementById('bronIsm').value;
             const tel = document.getElementById('bronTel').value;
 
-            const reysRef = db.ref('reyslar/' + key);
-
-            reysRef.transaction((reys) => {
+            db.ref('reyslar/' + key).transaction((reys) => {
                 if (reys) {
-                    if (reys.joy > 0) {
-                        reys.joy -= 1;
+                    if (reys.joy >= bronJoy) {
+                        reys.joy -= bronJoy;
                         if (!reys.mijozlar) reys.mijozlar = {};
                         const newKey = db.ref().child('reyslar').push().key;
-                        reys.mijozlar[newKey] = { ism: ism, tel: tel, uid: currentUser ? currentUser.uid : 'anon' };
+                        reys.mijozlar[newKey] = { ism, tel, joySoni: bronJoy, uid: currentUser.uid };
                     } else {
-                        alert("Kechirasiz, joy qolmagan!");
+                        alert("Kechirasiz, yetarli bo'sh joy qolmagan!");
                         return;
                     }
                 }
                 return reys;
             }, (error, committed) => {
                 if (committed) {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('bronModal'));
-                    modal.hide();
-                    alert("Joy muvaffaqiyatli band qilindi!");
+                    bootstrap.Modal.getInstance(document.getElementById('bronModal')).hide();
+                    alert("Joy(lar) muvaffaqiyatli band qilindi!");
                 }
             });
         });
 
         function deleteReys(key) {
-            if (confirm("E'lonni o'chirmoqchimisiz?")) {
-                db.ref('reyslar/' + key).remove();
-            }
+            if (confirm("E'lonni o'chirmoqchimisiz?")) db.ref('reyslar/' + key).remove();
         }
 
         db.ref('reyslar').on('value', (snapshot) => {
@@ -342,10 +328,7 @@
             renderReyslar();
         });
 
-        function filterReyslar() {
-            renderReyslar();
-        }
-
+        function filterReyslar() { renderReyslar(); }
         function resetFilter() {
             document.getElementById('searchFrom').value = '';
             document.getElementById('searchTo').value = '';
@@ -366,6 +349,7 @@
             const fromVal = document.getElementById('searchFrom').value.toLowerCase();
             const toVal = document.getElementById('searchTo').value.toLowerCase();
             const dateVal = document.getElementById('searchDate').value;
+            const now = new Date().getTime();
 
             const keys = Object.keys(allReyslar).filter(key => {
                 const item = allReyslar[key];
@@ -381,28 +365,33 @@
             document.getElementById('reysCount').innerText = keys.length + ' ta';
 
             if (keys.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center py-4">Siz qidirgan yo\'nalishda reyslar topilmadi.</p>';
+                container.innerHTML = '<p class="text-muted text-center py-4">Natija topilmadi.</p>';
                 return;
             }
 
-            keys.reverse().forEach((key) => {
+            // Reyslarni yangisidan eskisiga qarab tartiblash
+            keys.sort((a, b) => (allReyslar[b].timestamp || 0) - (allReyslar[a].timestamp || 0));
+
+            keys.forEach((key) => {
                 const item = allReyslar[key];
                 const isOwner = currentUser && (item.ownerUid === currentUser.uid);
 
-                // Ushbu reysni bron qilgan foydalanuvchimi?
+                // 4-Kamchilik tuzatildi: Eskirgan vaqtni aniqlash
+                const reysTime = new Date(item.vaqt).getTime();
+                const isExpired = reysTime < now;
+
                 let isBookedByUser = false;
                 if (currentUser && item.mijozlar) {
                     isBookedByUser = Object.values(item.mijozlar).some(m => m.uid === currentUser.uid);
                 }
 
-                // Telefon raqamini ko'rsatish mantigi (Faqat egasiga yoki bron qilgan yo'lovchiga to'liq ko'rinadi)
                 const phoneDisplay = (isOwner || isBookedByUser) ? item.tel : maskPhone(item.tel);
 
                 let mijozlarHTML = '';
                 if (isOwner) {
                     if (item.mijozlar) {
                         Object.values(item.mijozlar).forEach(m => {
-                            mijozlarHTML += `<li class="small text-dark">👤 <b>${m.ism}</b> (📞 ${m.tel})</li>`;
+                            mijozlarHTML += `<li class="small text-dark">👤 <b>${m.ism}</b> (${m.joySoni || 1} ta joy) - 📞 ${m.tel}</li>`;
                         });
                     } else {
                         mijozlarHTML = '<span class="small text-muted">Hozircha yo\'lovchilar yo\'q</span>';
@@ -412,32 +401,32 @@
                 const joyQolmagan = item.joy <= 0;
 
                 container.innerHTML += `
-                    <div class="reys-card">
+                    <div class="reys-card ${isExpired ? 'expired-card' : ''}">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <span class="badge-custom me-1"><i class="bi bi-car-front"></i> ${item.mashina}</span>
-                                <span class="small text-muted ms-2">Haydovchi: <b>${item.ownerName || 'Haydovchi'}</b></span>
+                                <span class="small text-muted">Haydovchi: <b>${item.ownerName || 'Haydovchi'}</b></span>
                             </div>
                             <h4 class="fw-bold text-primary m-0">${item.narx} UZS</h4>
                         </div>
                         <h4 class="fw-bold my-2 text-dark">${item.qayerdan} <i class="bi bi-arrow-right text-primary"></i> ${item.qayerga}</h4>
                         <div class="text-muted small d-flex flex-wrap gap-3 my-2">
-                            <div><i class="bi bi-calendar-event"></i> ${item.vaqt}</div>
+                            <div><i class="bi bi-calendar-event"></i> ${item.vaqt} ${isExpired ? '<span class="badge bg-secondary ms-1">Vaqti o\'tdi</span>' : ''}</div>
                             <div><i class="bi bi-person-seat"></i> Bo'sh joy: <strong class="${joyQolmagan ? 'text-danger' : 'text-success'}">${item.joy} ta</strong></div>
-                            <div><i class="bi bi-telephone"></i> ${phoneDisplay} ${(isOwner || isBookedByUser) ? '' : '<span class="privacy-badge"><i class="bi bi-shield-lock"></i> Band qilgach ko\'rinadi</span>'}</div>
+                            <div><i class="bi bi-telephone"></i> ${phoneDisplay} ${(isOwner || isBookedByUser) ? '' : '<span class="privacy-badge"><i class="bi bi-shield-lock"></i> Band qilsangiz ko\'rinadi</span>'}</div>
                         </div>
 
                         ${isOwner ? `
                         <div class="bg-light p-2 rounded-3 mt-2 border">
-                            <div class="fw-bold small text-primary mb-1"><i class="bi bi-shield-lock"></i> Sizning e'loningiz (Yo'lovchilar):</div>
+                            <div class="fw-bold small text-primary mb-1"><i class="bi bi-shield-lock"></i> Sizning yo'lovchilaringiz:</div>
                             <ul class="list-unstyled mb-0 ms-2">${mijozlarHTML}</ul>
                         </div>
                         ` : ''}
 
                         <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
                             ${isOwner ? `<button onclick="deleteReys('${key}')" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> O'chirish</button>` : '<div></div>'}
-                            <button onclick="openBronModal('${key}')" class="btn btn-primary px-4 fw-bold" ${joyQolmagan ? 'disabled' : ''}>
-                                ${joyQolmagan ? 'Joy yo\'q' : 'Joyni band qilish'}
+                            <button onclick="openBronModal('${key}', ${item.joy})" class="btn btn-primary px-4 fw-bold" ${(joyQolmagan || isExpired) ? 'disabled' : ''}>
+                                ${isExpired ? 'Eskirgan' : (joyQolmagan ? 'Joy yo\'q' : 'Joyni band qilish')}
                             </button>
                         </div>
                     </div>
