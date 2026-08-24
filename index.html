@@ -188,6 +188,7 @@
     let currentUser = null;
     let allReyslar = [];
 
+    // Foydalanuvchi tizimga kirganini kuzatish
     auth.onAuthStateChanged(user => {
       currentUser = user;
       const authBtn = document.getElementById('authBtn');
@@ -224,6 +225,7 @@
       }
     }
 
+    // Bazadan reyslarni real vaqtda olish va tinglash
     db.ref('reyslar').on('value', snapshot => {
       const data = snapshot.val();
       allReyslar = [];
@@ -233,8 +235,11 @@
         });
       }
       renderReyslar(allReyslar);
+    }, error => {
+      console.error("Bazadan yuklashda xatolik:", error);
     });
 
+    // Reyslarni ekranga chiqarish
     function renderReyslar(list) {
       const container = document.getElementById('reyslarContainer');
       container.innerHTML = '';
@@ -324,6 +329,49 @@
         `;
         container.insertAdjacentHTML('beforeend', cardHtml);
       });
+    }
+
+    // Reysni saqlash funksiyasi
+    function saveReys(event) {
+      event.preventDefault();
+
+      const user = auth.currentUser;
+      if (!user) {
+        alert("E'lon berish uchun avval Google hisobingiz bilan tizimga kiring!");
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Saqlanmoqda...";
+
+      const newReys = {
+        driverUid: user.uid,
+        driverName: user.displayName || 'Haydovchi',
+        qayerdan: document.getElementById('qayerdan').value.trim(),
+        qayerga: document.getElementById('qayerga').value.trim(),
+        aniqManzil: document.getElementById('aniqManzil').value.trim(),
+        vaqt: document.getElementById('vaqt').value,
+        boShJoy: parseInt(document.getElementById('boShJoy').value),
+        narx: document.getElementById('narx').value,
+        userPhone: document.getElementById('userPhone').value.trim(),
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      };
+
+      db.ref('reyslar').push(newReys)
+        .then(() => {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> E\'lon qilish';
+          closeModal('createReysModal');
+          document.getElementById('createReysForm').reset();
+          alert("Reys muvaffaqiyatli e'lon qilindi!");
+        })
+        .catch(err => {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> E\'lon qilish';
+          alert("Saqlashda xatolik yuz berdi: " + err.message);
+          console.error("Save error:", err);
+        });
     }
 
     function openBronModal(reysId) {
@@ -416,45 +464,6 @@
 
     function closeModal(modalId) {
       document.getElementById(modalId).style.display = 'none';
-    }
-
-    function saveReys(event) {
-      event.preventDefault();
-
-      if (!currentUser) {
-        alert("Kirish amalga oshirilmagan!");
-        return;
-      }
-
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true;
-      submitBtn.innerText = "Saqlanmoqda...";
-
-      const newReys = {
-        driverUid: currentUser.uid,
-        driverName: currentUser.displayName || 'Haydovchi',
-        qayerdan: document.getElementById('qayerdan').value.trim(),
-        qayerga: document.getElementById('qayerga').value.trim(),
-        aniqManzil: document.getElementById('aniqManzil').value.trim(),
-        vaqt: document.getElementById('vaqt').value,
-        boShJoy: parseInt(document.getElementById('boShJoy').value),
-        narx: document.getElementById('narx').value,
-        userPhone: document.getElementById('userPhone').value.trim(),
-        createdAt: firebase.database.ServerValue.TIMESTAMP
-      };
-
-      db.ref('reyslar').push(newReys)
-        .then(() => {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> E\'lon qilish';
-          closeModal('createReysModal');
-          document.getElementById('createReysForm').reset();
-        })
-        .catch(err => {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> E\'lon qilish';
-          alert("Xatolik: " + err.message);
-        });
     }
 
     function filterReyslar() {
