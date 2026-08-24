@@ -26,6 +26,7 @@
     .badge-status { font-size: 0.85rem; padding: 0.4em 0.8em; }
     .profile-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
     .masked-info { background: #e9ecef; color: #6c757d; padding: 2px 8px; border-radius: 4px; font-style: italic; }
+    .passenger-box { background: #eef2f7; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; }
   </style>
 </head>
 <body>
@@ -163,6 +164,35 @@
     </div>
   </div>
 
+  <!-- Mijoz Bron Qilish Modali -->
+  <div class="modal fade" id="bronModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title"><i class="fa-solid fa-ticket me-2"></i>Reysni Bron Qilish</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="bronForm" onsubmit="confirmBron(event)">
+          <input type="hidden" id="selectedReysId">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Ismingiz va Familiyangiz</label>
+              <input type="text" id="passengerName" class="form-control" placeholder="Masalan: Ali Valiyev" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Telefon Raqamingiz</label>
+              <input type="tel" id="passengerPhone" class="form-control" placeholder="+998901234567" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
+            <button type="submit" class="btn btn-success fw-bold">Bron qilishni tasdiqlash</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Bootstrap 5 JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
 
@@ -254,9 +284,35 @@
         const isFull = item.boShJoy <= 0;
         const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.qayerdan + ' ' + (item.aniqManzil || ''))}`;
 
-        const showFullContact = currentUser && (currentUser.uid === item.driverUid);
+        const isDriver = currentUser && currentUser.uid === item.driverUid;
+        const passengers = item.passengers ? Object.values(item.passengers) : [];
+        const myBookingKey = passengers.find(p => currentUser && p.uid === currentUser.uid);
+
+        const showFullContact = isDriver || myBookingKey;
         const displayPhone = showFullContact ? item.userPhone : maskPhoneNumber(item.userPhone);
         const displayDriverName = showFullContact ? (item.driverName || 'Haydovchi') : 'Haydovchi (Maxfiy)';
+
+        let passengersListHtml = '';
+        if (isDriver && passengers.length > 0) {
+          passengersListHtml = `<div class="mt-2"><strong class="small text-secondary">Bron qilgan yo'lovchilar:</strong>`;
+          passengers.forEach(p => {
+            passengersListHtml += `<div class="passenger-box mt-1"><i class="fa-solid fa-user me-1"></i> ${p.name} - <a href="tel:${p.phone}" class="text-decoration-none fw-bold">${p.phone}</a></div>`;
+          });
+          passengersListHtml += `</div>`;
+        }
+
+        let actionButtonHtml = '';
+        if (myBookingKey) {
+          actionButtonHtml = `
+            <button class="btn btn-outline-danger btn-sm flex-fill fw-bold" onclick="cancelBron('${item.id}')">
+              <i class="fa-solid fa-xmark me-1"></i> Bronni Bekor qilish
+            </button>`;
+        } else {
+          actionButtonHtml = `
+            <button class="btn btn-primary btn-sm flex-fill fw-bold" onclick="openBronModal('${item.id}')" ${isExpired || isFull ? 'disabled' : ''}>
+              <i class="fa-solid fa-ticket me-1"></i> Bron / Raqamni olish
+            </button>`;
+        }
 
         const cardHtml = `
           <div class="col-md-6 col-lg-4">
@@ -273,18 +329,15 @@
                 <p class="small mb-1"><i class="fa-regular fa-clock me-1"></i> <strong>Vaqt:</strong> ${new Date(item.vaqt).toLocaleString('uz-UZ')}</p>
                 <p class="small mb-1"><i class="fa-solid fa-tag me-1 text-warning"></i> <strong>Narx:</strong> ${Number(item.narx).toLocaleString()} so'm</p>
                 <p class="small mb-1"><i class="fa-solid fa-user me-1 text-secondary"></i> <strong>E'lon beruvchi:</strong> ${displayDriverName}</p>
-                <p class="small mb-3"><i class="fa-solid fa-phone me-1 text-success"></i> <strong>Tel:</strong> <span class="${showFullContact ? '' : 'masked-info'}">${displayPhone}</span></p>
+                <p class="small mb-2"><i class="fa-solid fa-phone me-1 text-success"></i> <strong>Tel:</strong> <span class="${showFullContact ? '' : 'masked-info'}">${displayPhone}</span></p>
+
+                ${passengersListHtml}
                 
                 <div class="mt-auto pt-3 border-top d-flex gap-2">
                   <a href="${mapSearchUrl}" target="_blank" class="btn btn-outline-danger btn-sm flex-fill">
                     <i class="fa-solid fa-map-location-dot me-1"></i> Xarita
                   </a>
-                  <button 
-                    class="btn btn-primary btn-sm flex-fill fw-bold" 
-                    onclick="bronQilish('${item.id}', '${item.userPhone}')" 
-                    ${isExpired || isFull ? 'disabled' : ''}>
-                    <i class="fa-solid fa-ticket me-1"></i> Bron / Raqamni olish
-                  </button>
+                  ${actionButtonHtml}
                 </div>
               </div>
             </div>
@@ -344,24 +397,63 @@
       });
     }
 
-    function bronQilish(reysId, phone) {
+    function openBronModal(reysId) {
       if (!currentUser) {
-        alert("Haydovchi raqamini ko'rish va bron qilish uchun avval tizimga kiring!");
+        alert("Bron qilish uchun avval tizimga kiring!");
         handleAuthAction();
         return;
       }
+      document.getElementById('selectedReysId').value = reysId;
+      document.getElementById('passengerName').value = currentUser.displayName || '';
+      const modal = new bootstrap.Modal(document.getElementById('bronModal'));
+      modal.show();
+    }
+
+    function confirmBron(event) {
+      event.preventDefault();
+      const reysId = document.getElementById('selectedReysId').value;
+      const name = document.getElementById('passengerName').value;
+      const phone = document.getElementById('passengerPhone').value;
 
       const reysRef = db.ref(`reyslar/${reysId}`);
       reysRef.transaction(reys => {
         if (reys && reys.boShJoy > 0) {
           reys.boShJoy--;
+          if (!reys.passengers) reys.passengers = {};
+          reys.passengers[currentUser.uid] = {
+            uid: currentUser.uid,
+            name: name,
+            phone: phone
+          };
         }
         return reys;
       }, (error, committed) => {
         if (error || !committed) {
           alert("Bron qilish iloji bo'lmadi yoki joy qolmagan.");
         } else {
-          alert(`Joy muvaffaqiyatli bron qilindi!\n\nHaydovchi aloqa raqami: ${phone}`);
+          const modalElement = document.getElementById('bronModal');
+          const modal = bootstrap.Modal.getInstance(modalElement);
+          if (modal) modal.hide();
+          alert("Joy muvaffaqiyatli bron qilindi! Endi haydovchi raqami sizga ko'rinadi.");
+        }
+      });
+    }
+
+    function cancelBron(reysId) {
+      if (!confirm("Haqiqatan ham bronni bekor qilmoqchimisiz?")) return;
+
+      const reysRef = db.ref(`reyslar/${reysId}`);
+      reysRef.transaction(reys => {
+        if (reys && reys.passengers && reys.passengers[currentUser.uid]) {
+          reys.boShJoy++;
+          delete reys.passengers[currentUser.uid];
+        }
+        return reys;
+      }, (error, committed) => {
+        if (error || !committed) {
+          alert("Bekor qilishda xatolik yuz berdi.");
+        } else {
+          alert("Broningiz bekor qilindi!");
         }
       });
     }
