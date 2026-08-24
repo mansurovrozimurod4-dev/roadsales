@@ -204,6 +204,7 @@
         authBtn.classList.replace("btn-outline-light", "btn-light");
         userInfo.classList.add('d-none');
       }
+      renderReyslar(allReyslar);
     });
 
     function handleAuthAction(autoOpenModal = false) {
@@ -249,8 +250,14 @@
         const formatVaqt = item.vaqt ? new Date(item.vaqt).toLocaleString('uz-UZ') : 'Vaqt ko\'rsatilmadi';
 
         const isOwner = currentUser && currentUser.uid === item.driverUid;
-        let passengersHtml = '';
+        
+        let userPassKey = null;
+        if (currentUser && item.passengers) {
+          userPassKey = Object.keys(item.passengers).find(k => item.passengers[k].uid === currentUser.uid);
+        }
+        const hasBooked = !!userPassKey;
 
+        let passengersHtml = '';
         if (isOwner && item.passengers) {
           const passList = Object.values(item.passengers);
           passengersHtml = `
@@ -266,6 +273,24 @@
               </ul>
             </div>
           `;
+        }
+
+        let actionButtonHtml = '';
+        if (isOwner) {
+          actionButtonHtml = `
+            <button onclick="deleteReys('${item.id}')" class="btn btn-outline-danger btn-sm flex-fill fw-bold">
+              <i class="fa-solid fa-trash me-1"></i> E'lonni o'chirish
+            </button>`;
+        } else if (hasBooked) {
+          actionButtonHtml = `
+            <button onclick="cancelBron('${item.id}', '${userPassKey}')" class="btn btn-warning btn-sm flex-fill fw-bold text-dark">
+              <i class="fa-solid fa-xmark me-1"></i> Bronni bekor qilish
+            </button>`;
+        } else {
+          actionButtonHtml = `
+            <button onclick="openBronModal('${item.id}')" class="btn btn-primary btn-sm flex-fill fw-bold" ${isFull ? 'disabled' : ''}>
+              <i class="fa-solid fa-ticket me-1"></i> ${isFull ? 'Joy qolmagan' : 'Bron Qilish'}
+            </button>`;
         }
 
         const cardHtml = `
@@ -288,12 +313,10 @@
                 ${passengersHtml}
 
                 <div class="mt-auto pt-3 border-top d-flex gap-2">
-                  <a href="${mapSearchUrl}" target="_blank" class="btn btn-outline-danger btn-sm flex-fill">
-                    <i class="fa-solid fa-map-location-dot me-1"></i> Xarita
+                  <a href="${mapSearchUrl}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa-solid fa-map-location-dot"></i>
                   </a>
-                  <button onclick="openBronModal('${item.id}')" class="btn btn-primary btn-sm flex-fill fw-bold" ${isFull ? 'disabled' : ''}>
-                    <i class="fa-solid fa-ticket me-1"></i> ${isFull ? 'Joy qolmagan' : 'Bron Qilish'}
-                  </button>
+                  ${actionButtonHtml}
                 </div>
               </div>
             </div>
@@ -329,7 +352,7 @@
         if (reys && reys.boShJoy > 0) {
           reys.boShJoy--;
           if (!reys.passengers) reys.passengers = {};
-          const newPassKey = 'pass_' + Date.now();
+          const newPassKey = 'pass_' + currentUser.uid;
           reys.passengers[newPassKey] = {
             uid: currentUser.uid,
             name: name,
@@ -348,6 +371,37 @@
           alert("Reys muvaffaqiyatli bron qilindi! Telefon raqamingiz haydovchiga yetkazildi.");
         }
       });
+    }
+
+    function cancelBron(reysId, passKey) {
+      if (!confirm("Haqiqatan ham bronni bekor qilmoqchimisiz?")) return;
+
+      const reysRef = db.ref(`reyslar/${reysId}`);
+      reysRef.transaction(reys => {
+        if (reys && reys.passengers && reys.passengers[passKey]) {
+          delete reys.passengers[passKey];
+          reys.boShJoy++;
+        }
+        return reys;
+      }, (error, committed) => {
+        if (error || !committed) {
+          alert("Bekor qilishda xatolik yuz berdi.");
+        } else {
+          alert("Broningiz bekor qilindi!");
+        }
+      });
+    }
+
+    function deleteReys(reysId) {
+      if (!confirm("Haqiqatan ham ushbu e'lonni o'chirib tashlamoqchimisiz?")) return;
+
+      db.ref(`reyslar/${reysId}`).remove()
+        .then(() => {
+          alert("E'lon o'chirildi.");
+        })
+        .catch(err => {
+          alert("O'chirishda xatolik: " + err.message);
+        });
     }
 
     function openCreateModal() {
