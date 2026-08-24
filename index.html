@@ -270,7 +270,6 @@
             });
         });
 
-        // 1-Kamchilik tuzatildi: Faqat tizimga kirgan foydalanuvchi bron qila oladi
         function openBronModal(key, maxJoy) {
             if (!currentUser) {
                 alert("Joyni band qilish uchun avval Google orqali tizimga kiring!");
@@ -290,7 +289,6 @@
             new bootstrap.Modal(document.getElementById('bronModal')).show();
         }
 
-        // 2-Kamchilik tuzatildi: Dinamik ko'p joylarni bir yo'la band qilish
         document.getElementById('bronForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const key = document.getElementById('bronReysId').value;
@@ -318,6 +316,23 @@
                 }
             });
         });
+
+        // BRONNI BEKOR QILISH FUNKSIYASI
+        function cancelBron(reysKey, mijozKey, joySoni) {
+            if (confirm("Rostdan ham ushbu bronni bekor qilmoqchimisiz?")) {
+                db.ref('reyslar/' + reysKey).transaction((reys) => {
+                    if (reys) {
+                        reys.joy += joySoni;
+                        if (reys.mijozlar && reys.mijozlar[mijozKey]) {
+                            delete reys.mijozlar[mijozKey];
+                        }
+                    }
+                    return reys;
+                }, (error, committed) => {
+                    if (committed) alert("Bron bekor qilindi!");
+                });
+            }
+        }
 
         function deleteReys(key) {
             if (confirm("E'lonni o'chirmoqchimisiz?")) db.ref('reyslar/' + key).remove();
@@ -369,29 +384,40 @@
                 return;
             }
 
-            // Reyslarni yangisidan eskisiga qarab tartiblash
             keys.sort((a, b) => (allReyslar[b].timestamp || 0) - (allReyslar[a].timestamp || 0));
 
             keys.forEach((key) => {
                 const item = allReyslar[key];
                 const isOwner = currentUser && (item.ownerUid === currentUser.uid);
 
-                // 4-Kamchilik tuzatildi: Eskirgan vaqtni aniqlash
                 const reysTime = new Date(item.vaqt).getTime();
                 const isExpired = reysTime < now;
 
+                let myBronKey = null;
+                let myBronJoySoni = 0;
                 let isBookedByUser = false;
+
                 if (currentUser && item.mijozlar) {
-                    isBookedByUser = Object.values(item.mijozlar).some(m => m.uid === currentUser.uid);
+                    Object.keys(item.mijozlar).forEach(mKey => {
+                        if (item.mijozlar[mKey].uid === currentUser.uid) {
+                            isBookedByUser = true;
+                            myBronKey = mKey;
+                            myBronJoySoni = item.mijozlar[mKey].joySoni;
+                        }
+                    });
                 }
 
-                const phoneDisplay = (isOwner || isBookedByUser) ? item.tel : maskPhone(item.tel);
+                // Qo'ng'iroq havola formatida
+                const cleanPhone = item.tel ? item.tel.replace(/\s+/g, '') : '';
+                const phoneDisplay = (isOwner || isBookedByUser) 
+                    ? `<a href="tel:${cleanPhone}" class="fw-bold text-decoration-none text-primary"><i class="bi bi-telephone-fill"></i> ${item.tel}</a>` 
+                    : maskPhone(item.tel);
 
                 let mijozlarHTML = '';
                 if (isOwner) {
                     if (item.mijozlar) {
                         Object.values(item.mijozlar).forEach(m => {
-                            mijozlarHTML += `<li class="small text-dark">👤 <b>${m.ism}</b> (${m.joySoni || 1} ta joy) - 📞 ${m.tel}</li>`;
+                            mijozlarHTML += `<li class="small text-dark">👤 <b>${m.ism}</b> (${m.joySoni || 1} ta joy) - <a href="tel:${m.tel.replace(/\s+/g, '')}" class="text-decoration-none">📞 ${m.tel}</a></li>`;
                         });
                     } else {
                         mijozlarHTML = '<span class="small text-muted">Hozircha yo\'lovchilar yo\'q</span>';
@@ -425,9 +451,22 @@
 
                         <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
                             ${isOwner ? `<button onclick="deleteReys('${key}')" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> O'chirish</button>` : '<div></div>'}
-                            <button onclick="openBronModal('${key}', ${item.joy})" class="btn btn-primary px-4 fw-bold" ${(joyQolmagan || isExpired) ? 'disabled' : ''}>
-                                ${isExpired ? 'Eskirgan' : (joyQolmagan ? 'Joy yo\'q' : 'Joyni band qilish')}
-                            </button>
+                            
+                            <div class="d-flex gap-2">
+                                ${isBookedByUser ? `
+                                    <button onclick="cancelBron('${key}', '${myBronKey}', ${myBronJoySoni})" class="btn btn-outline-warning btn-sm fw-bold">
+                                        <i class="bi bi-x-circle"></i> Bronni bekor qilish (${myBronJoySoni} ta)
+                                    </button>
+                                ` : ''}
+
+                                ${isOwner ? `
+                                    <button class="btn btn-secondary px-3 fw-bold" disabled>Sizning e'loningiz</button>
+                                ` : `
+                                    <button onclick="openBronModal('${key}', ${item.joy})" class="btn btn-primary px-4 fw-bold" ${(joyQolmagan || isExpired) ? 'disabled' : ''}>
+                                        ${isExpired ? 'Eskirgan' : (joyQolmagan ? 'Joy yo\'q' : 'Joyni band qilish')}
+                                    </button>
+                                `}
+                            </div>
                         </div>
                     </div>
                 `;
