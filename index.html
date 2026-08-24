@@ -12,6 +12,7 @@
   
   <!-- Firebase JS SDK (v8) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
@@ -20,6 +21,7 @@
     .card { border: none; border-radius: 12px; transition: transform 0.2s; }
     .card:hover { transform: translateY(-3px); }
     .badge-status { font-size: 0.85rem; padding: 0.4em 0.8em; }
+    .profile-img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
 
     .custom-modal {
       display: none;
@@ -46,6 +48,15 @@
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container">
       <a class="navbar-brand fw-bold" href="#"><i class="fa-solid fa-car-side me-2"></i>RoadSales</a>
+      <div class="d-flex align-items-center gap-3">
+        <div id="userInfo" class="d-none d-flex align-items-center gap-2 text-white">
+          <img id="userAvatar" class="profile-img" src="" alt="User">
+          <span id="userName" class="fw-semibold small"></span>
+        </div>
+        <button id="authBtn" class="btn btn-light btn-sm fw-bold" onclick="handleAuthAction()">
+          <i class="fa-brands fa-google me-1"></i> Kirish
+        </button>
+      </div>
     </div>
   </nav>
 
@@ -57,10 +68,10 @@
       
       <div class="row g-2 justify-content-center bg-white p-3 rounded-4 shadow text-dark mx-auto" style="max-width: 800px;">
         <div class="col-md-4">
-          <input type="text" id="filterQayerdan" class="form-control border-0 bg-light" placeholder="Qayerdan (Mas: Toshkent)">
+          <input type="text" id="filterQayerdan" class="form-control border-0 bg-light" placeholder="Qayerdan (Masalan: Toshkent)">
         </div>
         <div class="col-md-4">
-          <input type="text" id="filterQayerga" class="form-control border-0 bg-light" placeholder="Qayerga (Mas: Andijon)">
+          <input type="text" id="filterQayerga" class="form-control border-0 bg-light" placeholder="Qayerga (Masalan: Andijon)">
         </div>
         <div class="col-md-4">
           <button class="btn btn-primary w-100 fw-bold" onclick="filterReyslar()"><i class="fa-solid fa-magnifying-glass me-1"></i> Qidirish</button>
@@ -146,10 +157,49 @@
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
+    const auth = firebase.auth();
     const db = firebase.database();
+
+    let currentUser = null;
     let allReyslar = [];
 
-    // Realtime Database-dan o'qish (Mijozlar avtomatik ko'radi)
+    // Auth holatini kuzatish
+    auth.onAuthStateChanged(user => {
+      currentUser = user;
+      const authBtn = document.getElementById('authBtn');
+      const userInfo = document.getElementById('userInfo');
+
+      if (user) {
+        authBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket me-1"></i> Chiqish';
+        authBtn.classList.replace("btn-light", "btn-outline-light");
+        userInfo.classList.remove('d-none');
+        document.getElementById('userName').innerText = user.displayName || 'Foydalanuvchi';
+        document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/35';
+      } else {
+        authBtn.innerHTML = '<i class="fa-brands fa-google me-1"></i> Kirish';
+        authBtn.classList.replace("btn-outline-light", "btn-light");
+        userInfo.classList.add('d-none');
+      }
+    });
+
+    function handleAuthAction(autoOpenModal = false) {
+      if (currentUser) {
+        auth.signOut();
+      } else {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+          .then(() => {
+            if (autoOpenModal) {
+              document.getElementById('createReysModal').style.display = 'flex';
+            }
+          })
+          .catch(error => {
+            alert("Kirishda xatolik yuz berdi: " + error.message);
+          });
+      }
+    }
+
+    // Database'dan ma'lumotlarni o'qish
     db.ref('reyslar').on('value', snapshot => {
       const data = snapshot.val();
       allReyslar = [];
@@ -188,6 +238,7 @@
                 <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot text-danger me-1"></i> ${item.aniqManzil || 'Ko\'rsatilmagan'}</p>
                 <p class="small mb-1"><i class="fa-regular fa-clock me-1"></i> <strong>Vaqt:</strong> ${new Date(item.vaqt).toLocaleString('uz-UZ')}</p>
                 <p class="small mb-1"><i class="fa-solid fa-tag me-1 text-warning"></i> <strong>Narx:</strong> ${Number(item.narx).toLocaleString()} so'm</p>
+                <p class="small mb-1"><i class="fa-solid fa-user me-1 text-secondary"></i> <strong>Haydovchi:</strong> ${item.driverName || 'Anonim'}</p>
                 <p class="small mb-2"><i class="fa-solid fa-phone me-1 text-success"></i> <strong>Tel:</strong> <a href="tel:${item.userPhone}" class="fw-bold text-decoration-none text-dark">${item.userPhone}</a></p>
                 
                 <div class="mt-auto pt-3 border-top d-flex gap-2">
@@ -220,6 +271,12 @@
     }
 
     function openCreateModal() {
+      if (!currentUser) {
+        if (confirm("Reys e'lon qilish uchun avval Google hisobingiz bilan kirishingiz kerak. Kirishni xohlaysizmi?")) {
+          handleAuthAction(true); // Kirgandan keyin modalni avtomatik ochadi
+        }
+        return;
+      }
       document.getElementById('createReysModal').style.display = 'flex';
     }
 
@@ -230,11 +287,18 @@
     function saveReys(event) {
       event.preventDefault();
 
+      if (!currentUser) {
+        alert("Kirish amalga oshirilmagan!");
+        return;
+      }
+
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = true;
       submitBtn.innerText = "Saqlanmoqda...";
 
       const newReys = {
+        driverUid: currentUser.uid,
+        driverName: currentUser.displayName || 'Haydovchi',
         qayerdan: document.getElementById('qayerdan').value.trim(),
         qayerga: document.getElementById('qayerga').value.trim(),
         aniqManzil: document.getElementById('aniqManzil').value.trim(),
