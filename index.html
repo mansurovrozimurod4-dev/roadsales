@@ -27,7 +27,26 @@
     .profile-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
     .masked-info { background: #e9ecef; color: #6c757d; padding: 2px 8px; border-radius: 4px; font-style: italic; }
     .passenger-box { background: #eef2f7; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; }
-    .form-card { border-top: 4px solid #198754; }
+
+    /* Custom Modal Style */
+    .custom-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    .custom-modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 95%;
+      max-width: 500px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      position: relative;
+    }
   </style>
 </head>
 <body>
@@ -50,30 +69,14 @@
   <div class="hero-section mb-4 text-center">
     <div class="container">
       <h2 class="fw-bold">Hamyonbop va qulay yo'llar</h2>
-      <p class="mb-3">Mavjud reyslarni qidiring yoki pastda o'zingiz yangi reys qoldiring!</p>
+      <p class="mb-3">O'zingizga mos reysni toping yoki o'z reysingizni e'lon qiling!</p>
       
       <div class="row g-2 justify-content-center bg-white p-3 rounded-4 shadow text-dark mx-auto" style="max-width: 800px;">
         <div class="col-md-4">
-          <select id="filterQayerdan" class="form-select border-0 bg-light">
-            <option value="">Qayerdan (Barchasi)</option>
-            <option value="Toshkent">Toshkent</option>
-            <option value="Samarqand">Samarqand</option>
-            <option value="Buxoro">Buxoro</option>
-            <option value="Andijon">Andijon</option>
-            <option value="Farg'ona">Farg'ona</option>
-            <option value="Namangan">Namangan</option>
-          </select>
+          <input type="text" id="filterQayerdan" class="form-control border-0 bg-light" placeholder="Qayerdan (Masalan: Toshkent)">
         </div>
         <div class="col-md-4">
-          <select id="filterQayerga" class="form-select border-0 bg-light">
-            <option value="">Qayerga (Barchasi)</option>
-            <option value="Toshkent">Toshkent</option>
-            <option value="Samarqand">Samarqand</option>
-            <option value="Buxoro">Buxoro</option>
-            <option value="Andijon">Andijon</option>
-            <option value="Farg'ona">Farg'ona</option>
-            <option value="Namangan">Namangan</option>
-          </select>
+          <input type="text" id="filterQayerga" class="form-control border-0 bg-light" placeholder="Qayerga (Masalan: Andijon)">
         </div>
         <div class="col-md-4">
           <button class="btn btn-primary w-100 fw-bold" onclick="filterReyslar()"><i class="fa-solid fa-magnifying-glass me-1"></i> Qidirish</button>
@@ -82,85 +85,66 @@
     </div>
   </div>
 
+  <!-- Reyslar Ro'yxati -->
   <div class="container mb-5">
-    <div class="row g-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="fw-bold m-0"><i class="fa-solid fa-list-check me-2 text-primary"></i>Mavjud Reyslar</h4>
+      <button type="button" class="btn btn-success fw-bold shadow-sm" onclick="openCreateModal()">
+        <i class="fa-solid fa-plus me-1"></i> Reys E'lon Qilish
+      </button>
+    </div>
 
-      <!-- OCHIQ REYS QO'SHISH FORMASI (HAYDOVCHILAR UCHUN) -->
-      <div class="col-lg-4">
-        <div class="card shadow-sm form-card p-3">
-          <h5 class="fw-bold text-success mb-3"><i class="fa-solid fa-plus-circle me-2"></i>Reys E'lon Qilish</h5>
-          <form id="createReysForm" onsubmit="saveReys(event)">
-            <div class="mb-2">
-              <label class="form-label small font-weight-bold mb-1">Qayerdan</label>
-              <select id="qayerdan" class="form-select form-select-sm" required>
-                <option value="">Tanlang...</option>
-                <option value="Toshkent">Toshkent</option>
-                <option value="Samarqand">Samarqand</option>
-                <option value="Buxoro">Buxoro</option>
-                <option value="Andijon">Andijon</option>
-                <option value="Farg'ona">Farg'ona</option>
-                <option value="Namangan">Namangan</option>
-              </select>
-            </div>
-            
-            <div class="mb-2">
-              <label class="form-label small font-weight-bold mb-1">Qayerga</label>
-              <select id="qayerga" class="form-select form-select-sm" required>
-                <option value="">Tanlang...</option>
-                <option value="Toshkent">Toshkent</option>
-                <option value="Samarqand">Samarqand</option>
-                <option value="Buxoro">Buxoro</option>
-                <option value="Andijon">Andijon</option>
-                <option value="Farg'ona">Farg'ona</option>
-                <option value="Namangan">Namangan</option>
-              </select>
-            </div>
-
-            <div class="mb-2">
-              <label class="form-label small mb-1">Aniq Manzil / Mo'ljal</label>
-              <input type="text" id="aniqManzil" class="form-control form-control-sm" placeholder="Masalan: Chilonzor Metro" required>
-            </div>
-
-            <div class="row g-2 mb-2">
-              <div class="col-6">
-                <label class="form-label small mb-1">Jo'nash Vaqti</label>
-                <input type="datetime-local" id="vaqt" class="form-control form-control-sm" required>
-              </div>
-              <div class="col-6">
-                <label class="form-label small mb-1">Bo'sh Joy Soni</label>
-                <input type="number" id="boShJoy" class="form-control form-control-sm" min="1" max="8" value="4" required>
-              </div>
-            </div>
-
-            <div class="row g-2 mb-3">
-              <div class="col-6">
-                <label class="form-label small mb-1">Narx (SO'M)</label>
-                <input type="number" id="narx" class="form-control form-control-sm" placeholder="50000" step="1000" required>
-              </div>
-              <div class="col-6">
-                <label class="form-label small mb-1">Aloqa Telefon</label>
-                <input type="tel" id="userPhone" class="form-control form-control-sm" placeholder="+998901234567" required>
-              </div>
-            </div>
-
-            <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm">
-              <i class="fa-solid fa-paper-plane me-1"></i> E'lonni Joylash
-            </button>
-          </form>
-        </div>
+    <div id="reyslarContainer" class="row g-4">
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Reyslar yuklanmoqda...</p>
       </div>
+    </div>
+  </div>
 
-      <!-- REYSLAR RO'YXATI (MIJOZLAR UCHUN) -->
-      <div class="col-lg-8">
-        <h4 class="fw-bold mb-3"><i class="fa-solid fa-list-check me-2 text-primary"></i>Mavjud Reyslar</h4>
-        <div id="reyslarContainer" class="row g-3">
-          <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2 text-muted">Reyslar yuklanmoqda...</p>
+  <!-- Reys Yaratish Modali -->
+  <div id="createReysModal" class="custom-modal">
+    <div class="custom-modal-content">
+      <div class="d-flex justify-content-between align-items-center pb-2 border-bottom mb-3">
+        <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-car me-2"></i>Yangi Reys Yaratish</h5>
+        <button type="button" class="btn-close" onclick="closeCreateModal()"></button>
+      </div>
+      <form id="createReysForm" onsubmit="saveReys(event)">
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label font-weight-bold">Qayerdan</label>
+            <input type="text" id="qayerdan" class="form-control" placeholder="Mas: Toshkent" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label font-weight-bold">Qayerga</label>
+            <input type="text" id="qayerga" class="form-control" placeholder="Mas: Andijon" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Aniq Manzil / Mo'ljal</label>
+            <input type="text" id="aniqManzil" class="form-control" placeholder="Masalan: Chilonzor Metro / Jizzax" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Jo'nash Vaqti</label>
+            <input type="datetime-local" id="vaqt" class="form-control" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Bo'sh Joy Soni</label>
+            <input type="number" id="boShJoy" class="form-control" min="1" max="8" value="4" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Narx (SO'M)</label>
+            <input type="number" id="narx" class="form-control" placeholder="50000" step="1000" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Aloqa Telefon</label>
+            <input type="tel" id="userPhone" class="form-control" placeholder="+998901234567" required>
           </div>
         </div>
-      </div>
-
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+          <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">Bekor qilish</button>
+          <button type="submit" id="submitBtn" class="btn btn-success"><i class="fa-solid fa-check me-1"></i> E'lon qilish</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -214,6 +198,7 @@
       }
     }
 
+    // Realtime Database-dan o'qish (Mijozlarga darhol ko'rinadi)
     db.ref('reyslar').on('value', snapshot => {
       const data = snapshot.val();
       allReyslar = [];
@@ -224,7 +209,8 @@
       }
       renderReyslar(allReyslar);
     }, error => {
-      document.getElementById('reyslarContainer').innerHTML = '<div class="text-center py-5 text-muted">Hozircha reyslar mavjud emas.</div>';
+      console.error(error);
+      document.getElementById('reyslarContainer').innerHTML = '<div class="text-center py-5 text-muted">Reyslarni yuklashda xatolik yuz berdi. Firebase qoidalarini tekshiring.</div>';
     });
 
     function maskPhoneNumber(phone) {
@@ -258,7 +244,7 @@
 
         const showFullContact = isDriver || myBookingKey;
         const displayPhone = showFullContact ? item.userPhone : maskPhoneNumber(item.userPhone);
-        const displayDriverName = showFullContact ? (item.driverName || 'Haydovchi') : 'Haydovchi (Maxfiy)';
+        const displayDriverName = showFullContact ? (item.driverName || 'Haydovchi') : 'Haydovchi';
 
         let passengersListHtml = '';
         if (isDriver && passengers.length > 0) {
@@ -283,7 +269,7 @@
         }
 
         const cardHtml = `
-          <div class="col-md-6">
+          <div class="col-md-6 col-lg-4">
             <div class="card h-100 shadow-sm border-0">
               <div class="card-body d-flex flex-column">
                 <div class="d-flex justify-content-between align-items-start mb-2">
@@ -296,7 +282,7 @@
                 <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot text-danger me-1"></i> ${item.aniqManzil || 'Ko\'rsatilmagan'}</p>
                 <p class="small mb-1"><i class="fa-regular fa-clock me-1"></i> <strong>Vaqt:</strong> ${new Date(item.vaqt).toLocaleString('uz-UZ')}</p>
                 <p class="small mb-1"><i class="fa-solid fa-tag me-1 text-warning"></i> <strong>Narx:</strong> ${Number(item.narx).toLocaleString()} so'm</p>
-                <p class="small mb-1"><i class="fa-solid fa-user me-1 text-secondary"></i> <strong>E'lon beruvchi:</strong> ${displayDriverName}</p>
+                <p class="small mb-1"><i class="fa-solid fa-user me-1 text-secondary"></i> <strong>Haydovchi:</strong> ${displayDriverName}</p>
                 <p class="small mb-2"><i class="fa-solid fa-phone me-1 text-success"></i> <strong>Tel:</strong> <span class="${showFullContact ? '' : 'masked-info'}">${displayPhone}</span></p>
 
                 ${passengersListHtml}
@@ -316,45 +302,69 @@
     }
 
     function filterReyslar() {
-      const qayerdan = document.getElementById('filterQayerdan').value;
-      const qayerga = document.getElementById('filterQayerga').value;
+      const qayerdan = document.getElementById('filterQayerdan').value.toLowerCase().trim();
+      const qayerga = document.getElementById('filterQayerga').value.toLowerCase().trim();
 
       const filtered = allReyslar.filter(item => {
-        const matchQayerdan = qayerdan ? item.qayerdan === qayerdan : true;
-        const matchQayerga = qayerga ? item.qayerga === qayerga : true;
+        const matchQayerdan = qayerdan ? item.qayerdan.toLowerCase().includes(qayerdan) : true;
+        const matchQayerga = qayerga ? item.qayerga.toLowerCase().includes(qayerga) : true;
         return matchQayerdan && matchQayerga;
       });
 
       renderReyslar(filtered);
     }
 
-    function saveReys(event) {
-      event.preventDefault();
+    function openCreateModal() {
       if (!currentUser) {
         alert("Reys e'lon qilish uchun avval Google orqali tizimga kiring!");
         handleAuthAction();
         return;
       }
+      document.getElementById('createReysModal').style.display = 'flex';
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createReysModal').style.display = 'none';
+    }
+
+    function saveReys(event) {
+      event.preventDefault();
+
+      if (!currentUser) {
+        alert("Kirish amalga oshirilmagan!");
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Saqlanmoqda...";
 
       const newReys = {
         driverUid: currentUser.uid,
-        driverName: currentUser.displayName,
-        qayerdan: document.getElementById('qayerdan').value,
-        qayerga: document.getElementById('qayerga').value,
-        aniqManzil: document.getElementById('aniqManzil').value,
+        driverName: currentUser.displayName || 'Haydovchi',
+        qayerdan: document.getElementById('qayerdan').value.trim(),
+        qayerga: document.getElementById('qayerga').value.trim(),
+        aniqManzil: document.getElementById('aniqManzil').value.trim(),
         vaqt: document.getElementById('vaqt').value,
         boShJoy: parseInt(document.getElementById('boShJoy').value),
         narx: document.getElementById('narx').value,
-        userPhone: document.getElementById('userPhone').value,
+        userPhone: document.getElementById('userPhone').value.trim(),
         createdAt: firebase.database.ServerValue.TIMESTAMP
       };
 
-      db.ref('reyslar').push(newReys).then(() => {
-        document.getElementById('createReysForm').reset();
-        alert("Reys muvaffaqiyatli e'lon qilindi!");
-      }).catch(err => {
-        alert("Xatolik yuz berdi: " + err.message);
-      });
+      db.ref('reyslar').push(newReys)
+        .then(() => {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> E\'lon qilish';
+          closeCreateModal();
+          document.getElementById('createReysForm').reset();
+          alert("Reys muvaffaqiyatli e'lon qilindi va ro'yxatga qo'shildi!");
+        })
+        .catch(err => {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> E\'lon qilish';
+          alert("Xatolik: " + err.message + "\nFirebase Database Rules (Qoidalari) ochiqligini tekshiring!");
+        });
     }
 
     function bronQilish(reysId) {
@@ -364,7 +374,7 @@
         return;
       }
 
-      const passengerPhone = prompt("Telefon raqamingizni kiriting:", "+998");
+      const passengerPhone = prompt("Aloqa uchun telefon raqamingizni kiriting:", "+998");
       if (!passengerPhone) return;
 
       const reysRef = db.ref(`reyslar/${reysId}`);
@@ -381,7 +391,7 @@
         return reys;
       }, (error, committed) => {
         if (error || !committed) {
-          alert("Bron qilish iloji bo'lmadi yoki joy qolmagan.");
+          alert("Bron qilish iloji bo'lmadi yoki bo'sh joy qolmagan.");
         } else {
           alert("Joy muvaffaqiyatli bron qilindi! Endi haydovchi raqami sizga ko'rinadi.");
         }
