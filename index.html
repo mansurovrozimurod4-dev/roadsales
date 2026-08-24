@@ -69,10 +69,11 @@
 
         /* Feed Area */
         .content-area { max-width: 1080px; margin: 30px auto 60px auto; padding: 0 20px; }
-        .driver-modal { display: none; background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .driver-modal { display: block; background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         .driver-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
         .driver-grid input, .driver-grid textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-weight: 600; font-size: 14px; }
-        .btn-submit-driver { grid-column: 1 / -1; background: #10b981; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 15px; cursor: pointer; }
+        .btn-submit-driver { grid-column: 1 / -1; background: #10b981; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 16px; cursor: pointer; transition: background 0.2s; }
+        .btn-submit-driver:hover { background: #059669; }
 
         .results-container { background: #f8fafc; border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
@@ -90,7 +91,6 @@
         .btn-book { background: #0c73fe; color: white; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(12, 115, 254, 0.25); }
         .btn-delete { background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer; margin-top: 8px; }
 
-        /* Reys Tagidagi Mijozlar Boli'mi (Inline) */
         .trip-customers { margin-top: 15px; padding-top: 15px; border-top: 2px dashed #f1f5f9; }
         .customers-title { font-size: 13px; font-weight: 800; color: #475569; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
         .customer-tags { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -283,8 +283,8 @@
     <!-- Feed & Driver Form -->
     <div class="content-area">
         <div class="driver-modal" id="driverModal">
-            <h2 id="txt-add-title">🚗 Yangi reys e'lon qilish</h2>
-            <form onsubmit="addTrip(event)">
+            <h2 id="txt-add-title" style="margin-bottom: 15px;">🚗 Yangi reys e'lon qilish</h2>
+            <form id="driverForm" onsubmit="addTrip(event)">
                 <div class="driver-grid">
                     <input type="text" id="d-from" placeholder="Qayerdan (masalan: Dashtobod)" required>
                     <input type="text" id="d-to" placeholder="Qayerga (masalan: Guliston)" required>
@@ -405,7 +405,7 @@
     </div>
 
     <script>
-        // FIREBASE INITIALIZATION
+        // FIREBASE CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyA6WojPCfBI8pPdLLFi7rRP-lxgbkmEhbk",
             authDomain: "roadsales-f1e34.firebaseapp.com",
@@ -427,7 +427,7 @@
         let passengerCounts = { adults: 1, children: 0, infants: 0 };
         let trips = [];
 
-        // Auth Listener
+        // Auth listener
         auth.onAuthStateChanged(user => {
             currentUser = user;
             const profileText = document.getElementById('txt-nav-profile');
@@ -444,11 +444,11 @@
                 auth.signOut();
             } else {
                 const provider = new firebase.auth.GoogleAuthProvider();
-                auth.signInWithPopup(provider).catch(err => alert("Xatolik: " + err.message));
+                auth.signInWithPopup(provider).catch(err => alert("Kirishda xatolik: " + err.message));
             }
         }
 
-        // Realtime Data Sync
+        // Realtime Database Listener
         db.ref('reyslar').on('value', snapshot => {
             const data = snapshot.val();
             trips = [];
@@ -513,6 +513,56 @@
                 pdfBaggageVal: "1 Чемодан (20кг)"
             }
         };
+
+        // REYS QO'SHISH FUNKSIYASI (Tuzatilgan)
+        function addTrip(e) {
+            if (e) e.preventDefault();
+
+            if (!currentUser) {
+                alert("Reys e'lon qilish uchun avval Google orqali tizimga kiring!");
+                handleAuthAction();
+                return;
+            }
+
+            const fromVal = document.getElementById('d-from').value.trim();
+            const toVal = document.getElementById('d-to').value.trim();
+            const timeVal = document.getElementById('d-time').value;
+            const seatsVal = document.getElementById('d-seats').value;
+            const priceVal = document.getElementById('d-price').value;
+            const carVal = document.getElementById('d-car').value.trim();
+            const phoneVal = document.getElementById('d-phone').value.trim();
+            const infoVal = document.getElementById('d-info').value.trim();
+
+            if (!fromVal || !toVal || !timeVal || !seatsVal || !priceVal || !carVal || !phoneVal) {
+                alert("Iltimos, barcha majburiy maydonlarni to'ldiring!");
+                return;
+            }
+
+            const newTrip = {
+                driverUid: currentUser.uid,
+                driverName: currentUser.displayName || 'Haydovchi',
+                from: fromVal,
+                to: toVal,
+                time: timeVal,
+                seats: parseInt(seatsVal),
+                price: priceVal,
+                car: carVal,
+                phone: phoneVal,
+                info: infoVal,
+                badges: [{ text: "✨ Yangi Reys", type: "cheap" }],
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            db.ref('reyslar').push(newTrip)
+                .then(() => {
+                    alert("Reys muvaffaqiyatli e'lon qilindi!");
+                    document.getElementById('driverForm').reset();
+                })
+                .catch(err => {
+                    console.error("Firebase write error:", err);
+                    alert("Bazaga yozishda xatolik yuz berdi: " + err.message);
+                });
+        }
 
         function filterCities(type) {
             const inputVal = document.getElementById(`search-${type}`).value.toLowerCase();
@@ -614,7 +664,7 @@
         function renderTrips(data) {
             const container = document.getElementById('trips-list');
             if (!data || data.length === 0) {
-                container.innerHTML = `<p style="font-size: 14px; color: #64748b; font-weight: 600; text-align: center; padding: 20px 0;">Hozircha faol reyslar yo'q. Yuqoridagi "Reys kiritish" tugmasini bosib e'lon qo'shing.</p>`;
+                container.innerHTML = `<p style="font-size: 14px; color: #64748b; font-weight: 600; text-align: center; padding: 20px 0;">Hozircha faol reyslar yo'q. E'lon kiritish formasidan foydalaning.</p>`;
                 return;
             }
             container.innerHTML = '';
@@ -627,7 +677,6 @@
 
                 const isOwner = currentUser && currentUser.uid === trip.driverUid;
 
-                // Mijozlar ro'yxatini shakllantirish (Faqat egasiga ko'rinadi - Maxfiylik)
                 let customersHTML = '';
                 if (isOwner) {
                     if (trip.bookedCustomers && trip.bookedCustomers.length > 0) {
@@ -670,7 +719,6 @@
                             </div>
                         </div>
 
-                        <!-- Har bir e'lon tagida mijozlar ma'lumoti -->
                         <div class="trip-customers">
                             <div class="customers-title">👥 Bron qilgan mijozlar (Haydovchi uchun):</div>
                             <div class="customer-tags">
@@ -697,38 +745,7 @@
                 return;
             }
             const modal = document.getElementById('driverModal');
-            modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function addTrip(e) {
-            e.preventDefault();
-            if (!currentUser) {
-                alert("Avval tizimga kiring!");
-                return;
-            }
-
-            const newTrip = {
-                driverUid: currentUser.uid,
-                driverName: currentUser.displayName || 'Haydovchi',
-                from: document.getElementById('d-from').value.trim(),
-                to: document.getElementById('d-to').value.trim(),
-                time: document.getElementById('d-time').value,
-                seats: parseInt(document.getElementById('d-seats').value),
-                price: document.getElementById('d-price').value,
-                car: document.getElementById('d-car').value.trim(),
-                phone: document.getElementById('d-phone').value.trim(),
-                info: document.getElementById('d-info').value.trim(),
-                badges: [{ text: "✨ Yangi Reys", type: "cheap" }],
-                createdAt: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            db.ref('reyslar').push(newTrip)
-                .then(() => {
-                    toggleDriverModal();
-                    alert("Reys e'lon qilindi va bazaga saqlandi!");
-                    e.target.reset();
-                })
-                .catch(err => alert("Xatolik: " + err.message));
+            modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
         }
 
         function deleteTrip(tripId) {
